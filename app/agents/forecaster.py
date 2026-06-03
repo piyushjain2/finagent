@@ -56,5 +56,6 @@ def run_stock_prediction(ticker: str, price_data: list[dict]) -> dict:
                       agent="stock_predictor", max_tokens=1024)
     clean = raw.strip().removeprefix("```json").removeprefix("```").removesuffix("```").strip()
     result = json.loads(clean)
+    RESPONSES_DIR.mkdir(parents=True, exist_ok=True)
     cache.write_text(json.dumps(result, indent=2))
     return result

@@ -41,5 +41,6 @@ def revise_forecast(ticker: str, year: int, strategy: str,
                       agent=f"revise_{strategy}", max_tokens=1024)
     clean = raw.strip().removeprefix("```json").removeprefix("```").removesuffix("```").strip()
     result = json.loads(clean)
+    RESPONSES_DIR.mkdir(parents=True, exist_ok=True)
     cache.write_text(json.dumps(result, indent=2))
     return result

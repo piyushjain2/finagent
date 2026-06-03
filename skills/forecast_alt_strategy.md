@@ -6,7 +6,7 @@ Step 1: Extract Revenue and Net Income from the P&L statement.
 Step 2: Extract key balance sheet indicators from the Balance Sheet: total debt, capital expenditure, Return on Equity (RoE). These constrain growth capacity.
 Step 3: Read the Management Discussion & Analysis (MD&A) section. Identify: (a) management's stated growth outlook, (b) key risks, (c) new business segments or expansions planned.
 Step 4: Read the segment performance breakdown. Identify which segments are growing fastest and their revenue share.
-Step 5: Synthesise steps 1-4: weight the growth rate from Step 1 with the qualitative signals from Steps 3-4. If MD&A signals acceleration, revise upward; if risks dominate, revise downward.
+Step 5: Synthesise steps 1-4: weight the growth rate from Step 1 with the qualitative signals from Steps 3-4. If MD&A signals acceleration, revise upward; if risks dominate, revise downward. Forecast Revenue, Net Income, and EPS for {FORECAST_YEARS}.
 Step 6: State the top-2 assumptions driving your forecast explicitly.
 Step 7: Return your forecast as valid JSON only:
 {
