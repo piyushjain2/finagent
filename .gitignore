@@ -1,0 +1,13 @@
+venv/
+__pycache__/
+*.pyc
+*.pyo
+.env
+data/pdfs/
+data/vector_stores/
+data/responses/
+data/market/
+data/commentary/
+output/
+*.egg-info/
+.DS_Store
