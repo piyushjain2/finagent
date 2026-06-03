@@ -99,12 +99,15 @@ def fetch_prices(ticker: str) -> pd.DataFrame:
         df.columns = [c.lower() for c in df.columns]
         return df
 
-    t = yf.Ticker(f"{ticker}.NS")
-    df = t.history(start="2024-01-01", end="2024-12-31")
-    df = df[["Close"]].rename(columns={"Close": "close"})
-    df.index.name = "date"
-    df.to_csv(cache)
-    return df
+    try:
+        t = yf.Ticker(f"{ticker}.NS")
+        df = t.history(start="2024-01-01", end="2024-12-31")
+        df = df[["Close"]].rename(columns={"Close": "close"})
+        df.index.name = "date"
+        df.to_csv(cache)
+        return df
+    except Exception as e:
+        raise RuntimeError(f"Failed to fetch prices for {ticker}: {e}") from e
 
 def fetch_nifty50() -> pd.DataFrame:
     """Download 2024 NIFTY50 daily closes as benchmark."""
@@ -112,11 +115,14 @@ def fetch_nifty50() -> pd.DataFrame:
     cache = MARKET_DIR / "NIFTY50_2024_prices.csv"
     if cache.exists():
         return pd.read_csv(cache, index_col=0, parse_dates=True)
-    df = yf.Ticker("^NSEI").history(start="2024-01-01", end="2024-12-31")[["Close"]]
-    df.columns = ["close"]
-    df.index.name = "date"
-    df.to_csv(cache)
-    return df
+    try:
+        df = yf.Ticker("^NSEI").history(start="2024-01-01", end="2024-12-31")[["Close"]]
+        df.columns = ["close"]
+        df.index.name = "date"
+        df.to_csv(cache)
+        return df
+    except Exception as e:
+        raise RuntimeError(f"Failed to fetch NIFTY50: {e}") from e
 
 def fetch_earnings_dates(ticker: str) -> list[str]:
     """Fetch earnings announcement dates from yfinance calendar."""
