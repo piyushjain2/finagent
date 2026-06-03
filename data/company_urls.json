@@ -1,0 +1,22 @@
+{
+  "RELIANCE":  {"ir_url": "https://www.ril.com/ar/", "nse_code": "RELIANCE"},
+  "INFY":      {"ir_url": "https://www.infosys.com/investors/reports-filings/annual-report/", "nse_code": "INFY"},
+  "TCS":       {"ir_url": "https://www.tcs.com/investor-relations/annual-reports", "nse_code": "TCS"},
+  "HDFCBANK":  {"ir_url": "https://www.hdfcbank.com/content/bbp/repositories/723fb80a-2dde-42a3-9793-7ae1be57c87f/?folderPath=/Resources/Other/2024/annual_report/", "nse_code": "HDFCBANK"},
+  "ICICIBANK": {"ir_url": "https://www.icicibank.com/investor-relations/annual-report", "nse_code": "ICICIBANK"},
+  "SBIN":      {"ir_url": "https://sbi.co.in/web/investor-relations/annual-reports", "nse_code": "SBIN"},
+  "ITC":       {"ir_url": "https://www.itcportal.com/investor-relations/annual-report.aspx", "nse_code": "ITC"},
+  "LT":        {"ir_url": "https://www.larsentoubro.com/corporate/investor-relations/annual-report/", "nse_code": "LT"},
+  "NTPC":      {"ir_url": "https://www.ntpc.co.in/en/investors/annual-reports", "nse_code": "NTPC"},
+  "ONGC":      {"ir_url": "https://www.ongcindia.com/wps/wcm/connect/en/investors/annual-report/", "nse_code": "ONGC"},
+  "REC":       {"ir_url": "https://www.recindia.nic.in/annual-report", "nse_code": "RECLTD"},
+  "PFC":       {"ir_url": "https://www.pfcindia.com/Default/ViewFile/?id=annual_report", "nse_code": "PFC"},
+  "HUDCO":     {"ir_url": "https://hudco.org/english/annualreport.php", "nse_code": "HUDCO"},
+  "IREDA":     {"ir_url": "https://www.ireda.in/annual-report", "nse_code": "IREDA"},
+  "IFCI":      {"ir_url": "https://www.ifciltd.com/investor-relations/annual-report/", "nse_code": "IFCI"},
+  "KEC":       {"ir_url": "https://www.kecinternational.com/annual-report", "nse_code": "KEC"},
+  "TEXRAIL":   {"ir_url": "https://www.texrail.co.in/investors/annual-reports", "nse_code": "TEXRAIL"},
+  "POWERMECH": {"ir_url": "https://www.powermech.net/annual-reports", "nse_code": "POWERMECH"},
+  "VINDHYATEL":{"ir_url": "https://vindhyatel.co.in/annual-reports/", "nse_code": "VINDHYATEL"},
+  "SKIPPER":   {"ir_url": "https://www.skipper.net.in/annual-report/", "nse_code": "SKIPPER"}
+}
