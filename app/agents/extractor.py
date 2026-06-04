@@ -1,6 +1,6 @@
 import json
 from pathlib import Path
-from app.claude_client import call_claude, load_skill
+from app.claude_client import call_claude, load_skill, HAIKU_MODEL
 from app.agents.rag_processor import query_chunks
 from app.agents.forecaster import _extract_json
 
@@ -17,13 +17,15 @@ def extract_financials(ticker: str, year: int) -> dict:
 
     chunks = query_chunks(ticker, year,
         "revenues net profit attributable to owners earnings per share "
-        "consolidated statement of profit and loss", n=10)
+        "consolidated statement of profit and loss", n=6)
     context = "\n\n---\n\n".join(chunks)
 
     skill = load_skill(SKILL_PATH)
     prompt = f"{skill}\n\n=== ANNUAL REPORT TEXT ===\n{context}"
 
-    raw = call_claude(prompt, ticker=ticker, year=year, agent="extractor", max_tokens=2048)
+    # Haiku: extraction is mechanical table-reading — 1/3 the cost of Sonnet
+    raw = call_claude(prompt, ticker=ticker, year=year, agent="extractor",
+                      max_tokens=2048, model=HAIKU_MODEL)
     result = _extract_json(raw)
     cache.write_text(json.dumps(result, indent=2))
     return result

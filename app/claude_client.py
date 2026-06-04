@@ -8,7 +8,11 @@ from dotenv import load_dotenv
 load_dotenv()
 _client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
 PROMPTS_DIR = Path("data/prompts")
-MODEL = "claude-sonnet-4-6"
+
+# Cost strategy: Sonnet runs the forecasting EXPERIMENT (the subject of the study);
+# Haiku handles mechanical data plumbing (extraction) at ~1/3 the price.
+MODEL = "claude-sonnet-4-6"          # forecasting, critique, revise, stock prediction, commentary
+HAIKU_MODEL = "claude-haiku-4-5"     # extraction (mechanical table-reading)
 
 
 def call_claude(
@@ -18,6 +22,7 @@ def call_claude(
     agent: str,
     system: str | None = None,
     max_tokens: int = 4096,
+    model: str | None = None,
 ) -> str:
     """Call Claude API and log the interaction to the Prompt Vault.
 
@@ -28,12 +33,14 @@ def call_claude(
         agent: Agent name for logging
         system: Optional system message
         max_tokens: Maximum tokens in response
+        model: Override model (default: Sonnet). Use HAIKU_MODEL for mechanical tasks.
 
     Returns:
         The text response from Claude
     """
+    use_model = model or MODEL
     kwargs: dict = {
-        "model": MODEL,
+        "model": use_model,
         "max_tokens": max_tokens,
         "messages": [{"role": "user", "content": prompt}],
     }
@@ -54,7 +61,7 @@ def call_claude(
                     "ticker": ticker,
                     "year": year,
                     "agent": agent,
-                    "model": MODEL,
+                    "model": use_model,
                     "timestamp": datetime.now(timezone.utc).isoformat(),
                     "prompt": prompt,
                     "response": text,

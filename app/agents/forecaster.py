@@ -84,7 +84,7 @@ def _forecast_one(ticker: str, year: int, strategy: str) -> dict:
         skill = load_skill(ALT_SKILL)
         forecast_years = f"{year+1}, {year+2}, {year+3}"
 
-    chunks = query_chunks(ticker, year, query, n=12)
+    chunks = query_chunks(ticker, year, query, n=8)
     context = "\n\n---\n\n".join(chunks)
     prompt = (skill
               .replace("{FORECAST_YEARS}", forecast_years)
