@@ -62,6 +62,35 @@ function selectCompany(ticker, cap) {
   document.getElementById("messages").innerHTML = "";
   resetPipeline();
   renderList(COMPANIES);
+
+  // If the pipeline is mid-run for this ticker, just show progress.
+  const st = companyStatus[ticker];
+  if (st && st.dot === "running") {
+    addBubble(`⟳ ${ticker} pipeline is running — progress will stream here.`, "bot");
+    return;
+  }
+
+  // Otherwise ask the server what state this company is in and offer ONE clear action.
+  fetch(`/status/${ticker}`).then(r => r.json()).then(s => {
+    if (s.report_ready) {
+      addBubble(
+        `<b>${ticker}</b> has been analyzed and its report is ready.<br><br>
+         <button class="btn" onclick="window.location.href='/report/download/${ticker}'">⬇ Download report</button>
+         <button class="btn secondary" onclick="rerunCompany('${ticker}')">🔁 Re-run analysis</button>`, "bot");
+    } else if (s.analyzed) {
+      addBubble(
+        `<b>${ticker}</b> has analysis data but no report yet.<br><br>
+         <button class="btn" onclick="generateCompanyReport('${ticker}')">📄 Generate report</button>
+         <button class="btn secondary" onclick="rerunCompany('${ticker}')">🔁 Re-run analysis</button>`, "bot");
+    } else {
+      addBubble(
+        `Ready to analyze <b>${ticker}</b> — downloads annual reports, runs the 9-agent pipeline,
+         and produces a forecast report automatically.<br><br>
+         <button class="btn" onclick="analyzeTicker('${ticker}')">▶ Analyze ${ticker}</button>`, "bot");
+    }
+  }).catch(() => {
+    addBubble(`<button class="btn" onclick="analyzeTicker('${ticker}')">▶ Analyze ${ticker}</button>`, "bot");
+  });
 }
 
 function resetPipeline() {
@@ -73,12 +102,19 @@ function resetPipeline() {
 // ── Analysis ──────────────────────────────────────────────────────────────────
 
 function analyzeTicker(ticker) {
-  const c = COMPANIES.find(x => x.t === ticker);
-  if (c) selectCompany(c.t, c.cap);
   setCompanyStatus(ticker, "running", "Starting pipeline…");
+  addBubble(`▶ Starting full analysis for <b>${ticker}</b>…`, "bot");
   fetch(`/analyze/${ticker}`, {method:"POST"})
     .then(() => startStream(ticker))
     .catch(e => addBubble(`Error starting: ${e}`, "bot"));
+}
+
+function rerunCompany(ticker) {
+  addBubble(`🔁 Re-running analysis for <b>${ticker}</b> (cached stages are reused)…`, "bot");
+  setCompanyStatus(ticker, "running", "Re-running…");
+  fetch(`/analyze/${ticker}`, {method:"POST"})
+    .then(() => startStream(ticker))
+    .catch(e => addBubble(`Error: ${e}`, "bot"));
 }
 
 function analyzeAll() {
@@ -95,12 +131,14 @@ function analyzeAll() {
 }
 
 function generateCompanyReport(ticker) {
-  addBubble(`⟳ Generating report for ${ticker}…`, "bot");
   fetch(`/generate-report/${ticker}`, {method:"POST"})
     .then(r => r.json())
     .then(d => {
       if (d.status === "done") {
-        addBubble(`✅ ${ticker} report ready! <a href="/report/download/${ticker}" target="_blank">⬇ Download ${ticker}_Report.docx</a>`, "bot");
+        addBubble(
+          `✅ <b>${ticker}</b> report ready.<br><br>
+           <button class="btn" onclick="window.location.href='/report/download/${ticker}'">⬇ Download ${ticker} report</button>
+           <button class="btn secondary" onclick="showEvals()">📊 View evals</button>`, "bot");
       } else {
         addBubble(`❌ Report failed: ${d.detail || "unknown error"}`, "bot");
       }
@@ -228,16 +266,10 @@ function handleEvent(ticker, payload) {
       html = `<span class="agent-label al-met">⑦ Metrics</span><br>✅ Accuracy tables updated`; break;
     case "pipeline_complete":
       html = `<span class="agent-label al-rep">✅ Pipeline Complete</span><br>
-        <strong>${ticker}</strong> analysis done.<br><br>
-        <button onclick="generateCompanyReport('${ticker}')" style="background:#1a5276;color:#fff;border:none;padding:7px 16px;border-radius:8px;cursor:pointer;font-size:13px;margin-right:8px">
-          📄 Report for ${ticker}
-        </button>
-        <button onclick="generateReport()" style="background:#f0f2f5;color:#374151;border:1px solid #e9edef;padding:7px 16px;border-radius:8px;cursor:pointer;font-size:13px;margin-right:8px">
-          📄 Full 20-company report
-        </button>
-        <button onclick="showEvals()" style="background:#f0f2f5;color:#374151;border:1px solid #e9edef;padding:7px 16px;border-radius:8px;cursor:pointer;font-size:13px">
-          📊 View evals
-        </button>`; break;
+        <strong>${ticker}</strong> analysis done — generating report…`;
+      // Auto-generate the per-company report; download link appears when ready
+      setTimeout(() => generateCompanyReport(ticker), 500);
+      break;
     case "pipeline_error":
       html = `⚠️ Pipeline error: ${data.error||"unknown"}`; break;
     case "warning":

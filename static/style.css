@@ -76,3 +76,9 @@ table.eval-table th{background:#1e293b;color:#94a3b8;padding:7px 10px;text-align
 table.eval-table td{padding:6px 10px;border-bottom:1px solid #f1f5f9;color:#374151}
 table.eval-table tr:hover td{background:#f8fafc}
 .sidebar-section{padding:5px 16px 3px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#adb5bd;background:#fafafa}
+
+/* Chat action buttons */
+.btn{background:#1a5276;color:#fff;border:none;padding:8px 18px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;margin:4px 8px 2px 0}
+.btn:hover{background:#2e86c1}
+.btn.secondary{background:#f0f2f5;color:#374151;border:1px solid #e9edef}
+.btn.secondary:hover{border-color:#1a5276;color:#1a5276}

@@ -91,6 +91,15 @@ async def generate_company_report_endpoint(ticker: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@app.get("/status/{ticker}")
+async def company_status(ticker: str):
+    """What state is this company in? Drives the UI's call-to-action."""
+    t = ticker.upper()
+    has_forecast = any(Path("data/responses").glob(f"{t}_*_forecast.json"))
+    report = Path(f"output/report_{t}.docx")
+    return {"analyzed": has_forecast, "report_ready": report.exists()}
+
+
 @app.get("/report/status")
 async def report_status():
     report_path = Path("output/report.docx")
