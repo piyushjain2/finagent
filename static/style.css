@@ -82,3 +82,14 @@ table.eval-table tr:hover td{background:#f8fafc}
 .btn:hover{background:#2e86c1}
 .btn.secondary{background:#f0f2f5;color:#374151;border:1px solid #e9edef}
 .btn.secondary:hover{border-color:#1a5276;color:#1a5276}
+
+
+/* Prompt/query-response cards (📝 panel) */
+.prompt-card{background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:12px 14px;margin-bottom:14px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.prompt-card-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;flex-wrap:wrap;gap:4px}
+.pc-agent{font-size:12.5px;font-weight:700;color:#1a5276}
+.pc-meta{font-size:10.5px;color:#94a3b8;font-family:monospace}
+.pc-label{font-size:9.5px;font-weight:700;letter-spacing:.08em;color:#64748b;margin:6px 0 3px}
+.pc-block{font-family:ui-monospace,Menlo,monospace;font-size:10.5px;line-height:1.5;white-space:pre-wrap;word-break:break-word;border-radius:6px;padding:8px 10px;margin:0;max-height:180px;overflow-y:auto}
+.pc-query{background:#0d1117;color:#c9d1d9}
+.pc-response{background:#f0fdf4;color:#14532d;border:1px solid #bbf7d0}

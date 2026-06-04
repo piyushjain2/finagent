@@ -325,16 +325,66 @@ function showEvals() {
         ${rows.slice(0,30).map(r=>`<tr>${Object.values(r).map(v=>`<td>${v??""}</td>`).join("")}</tr>`).join("")}
         </tbody></table></div>`;
     }
+    const panel = document.getElementById("evalsPanel");
+    panel.querySelector(".evals-header span").textContent = "Eval Results";
     document.getElementById("evalsBody").innerHTML = html || "<p style='padding:16px;color:#64748b'>No eval data yet. Run the pipeline first.</p>";
-    document.getElementById("evalsPanel").classList.add("open");
+    panel.classList.add("open");
   });
 }
 
 function closeEvals() { document.getElementById("evalsPanel").classList.remove("open"); }
 
+const AGENT_LABELS = {
+  extractor: "③ Financial Extractor (Haiku)",
+  forecaster_baseline: "④ Baseline Forecast (Sonnet)",
+  forecaster_alt_strategy: "④ Alt v1 Forecast (Sonnet)",
+  forecaster_alt_v2: "④ Alt v2 Forecast — Structured Data (Sonnet)",
+  critique_baseline: "⑤ Critique — Baseline",
+  critique_alt_strategy: "⑤ Critique — Alt v1",
+  revise_baseline: "⑤ Revise — Baseline",
+  revise_alt_strategy: "⑤ Revise — Alt v1",
+  stock_predictor: "Q2 Stock Predictor (Sonnet)",
+};
+
 function showPrompts() {
-  if (!activeTicker) { alert("Select a company first."); return; }
-  window.open(`/prompts/${activeTicker}`, "_blank");
+  if (!activeTicker) {
+    addBubble("Select a company first, then click 📝 to see its queries & responses.", "bot");
+    return;
+  }
+  fetch(`/prompts/${activeTicker}`).then(r => r.json()).then(logs => {
+    if (!logs.length) {
+      addBubble(`No prompts logged yet for ${activeTicker} — run its analysis first.`, "bot");
+      return;
+    }
+    // Sort by timestamp, group view
+    logs.sort((a, b) => (a.timestamp || "").localeCompare(b.timestamp || ""));
+    let html = `<p style="font-size:11.5px;color:#64748b;margin-bottom:14px">
+        Every LLM interaction, logged verbatim (${logs.length} calls). Same prompt templates
+        used for all 20 companies.</p>`;
+    for (const e of logs) {
+      const label = AGENT_LABELS[e.agent] || e.agent;
+      html += `
+        <div class="prompt-card">
+          <div class="prompt-card-head">
+            <span class="pc-agent">${label}</span>
+            <span class="pc-meta">${e.model || ""} · FY${e.year} · ${(e.timestamp||"").slice(0,16).replace("T"," ")}</span>
+          </div>
+          <div class="pc-label">QUERY</div>
+          <pre class="pc-block pc-query">${escapeHtml(e.prompt || "").slice(0, 1200)}${(e.prompt||"").length > 1200 ? "\n[…]" : ""}</pre>
+          <div class="pc-label">RESPONSE</div>
+          <pre class="pc-block pc-response">${escapeHtml(e.response || "").slice(0, 900)}${(e.response||"").length > 900 ? "\n[…]" : ""}</pre>
+        </div>`;
+    }
+    const panel = document.getElementById("evalsPanel");
+    panel.querySelector(".evals-header span").textContent =
+      `📝 ${activeTicker} — Queries & Responses`;
+    document.getElementById("evalsBody").innerHTML = html;
+    panel.classList.add("open");
+  }).catch(e => addBubble(`Could not load prompts: ${e}`, "bot"));
+}
+
+function escapeHtml(s) {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────────
