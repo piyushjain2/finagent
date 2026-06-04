@@ -30,6 +30,9 @@ ONGC,2023,revenue_cr,forecast_alt_strategy,77350.0,773500.0,632291.0,x10^1
 ONGC,2024,revenue_cr,forecast_alt_strategy,80750.0,807500.0,601581.0,x10^1
 IREDA,2024,revenue_cr,actual,49663.58,4966.358,4965.0,x10^-1
 IREDA,2024,net_income_cr,actual,12522.29,1252.2290000000003,1252.0,x10^-1
+IREDA,2023,revenue_cr,actual,34830.44,3483.0440000000003,4009.1105286048505,x10^-1
+IREDA,2023,net_income_cr,actual,8646.28,864.6280000000002,815.5080496212948,x10^-1
+IREDA,2022,eps,forecast_baseline,0.63,6.3,4.491806423566978,x10^1
 IFCI,2024,net_income_cr,actual,103.66,,241.0,"EXCLUDED (off-basis, unfixable)"
 IFCI,2024,eps,forecast_baseline,-61.6,-0.616,0.47,x10^-2
 IFCI,2023,net_income_cr,forecast_alt_strategy,-1092.0,-109.2,-120.0,x10^-1

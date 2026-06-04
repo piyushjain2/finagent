@@ -1,0 +1,6 @@
+{
+  "_comment": "Surgical exclusions where PDF extraction repeatedly failed validation. null = exclude comparison (N/A in report). Documented in report limitations.",
+  "PFC": {
+    "2023": {"revenue_cr": null}
+  }
+}

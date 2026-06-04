@@ -193,7 +193,10 @@ def generate_report() -> Path:
     _add_heading(doc, "Q1a. Forecast Tables — Revenue & Net Income", 2)
     doc.add_paragraph(
         "Percentage Difference = ((Actual − Predicted) / Actual) × 100. "
-        "All monetary values in ₹ Crores. N/A = actual not yet published or data unavailable."
+        "All monetary values in ₹ Crores. N/A = actual not yet published or data unavailable. "
+        "n.m. = not meaningful (|difference| > 300%, typically a near-zero actual such as a "
+        "loss-to-profit turnaround year — standard equity-research convention; exact values "
+        "are retained in the underlying data)."
     )
 
     acc_path = EVALS_DIR / "forecast_accuracy.csv"
@@ -224,7 +227,10 @@ def generate_report() -> Path:
                                 r = r.iloc[0]
                                 pred = f"{r['predicted']:,.0f}" if pd.notna(r["predicted"]) else "N/A"
                                 act  = f"{r['actual']:,.0f}" if pd.notna(r["actual"]) else "N/A"
-                                err  = f"{r['pct_error']:.1f}%" if pd.notna(r["pct_error"]) else "N/A"
+                                if pd.notna(r["pct_error"]):
+                                    err = "n.m." if abs(r["pct_error"]) > 300 else f"{r['pct_error']:.1f}%"
+                                else:
+                                    err = "N/A"
                                 row += [pred, act, err]
                         rows.append(row)
                     cols = ["Company"]

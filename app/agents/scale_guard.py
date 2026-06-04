@@ -91,9 +91,29 @@ def fetch_screener_reference(ticker: str) -> dict[int, dict]:
             break
         time.sleep(1)
 
+    _interpolate_gap_years(out)
     MARKET_DIR.mkdir(parents=True, exist_ok=True)
     cache.write_text(json.dumps(out))
     return out
+
+
+def _interpolate_gap_years(ref: dict[int, dict]) -> None:
+    """
+    Log-linear interpolation for years missing from Screener (e.g. IREDA's
+    pre-listing gap). Interpolated values are magnitude references only —
+    good enough to catch 10x unit slips, never published as data.
+    """
+    for field in ("revenue_cr", "net_income_cr", "eps"):
+        years = sorted(y for y, v in ref.items() if v.get(field) and v[field] > 0)
+        for lo, hi in zip(years, years[1:]):
+            gap = hi - lo
+            if gap <= 1:
+                continue
+            v_lo, v_hi = ref[lo][field], ref[hi][field]
+            for y in range(lo + 1, hi):
+                frac = (y - lo) / gap
+                ref.setdefault(y, {}).setdefault(
+                    field, v_lo * (v_hi / v_lo) ** frac)
 
 
 def snap_scale(value: float | None, reference: float | None,

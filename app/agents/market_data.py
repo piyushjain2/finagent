@@ -33,7 +33,7 @@ def fetch_actuals(ticker: str) -> dict[int, dict]:
     if cache.exists():
         cached = {int(k): v for k, v in json.loads(cache.read_text()).items()}
         # Invalidate caches from older policies (multi-tier or pre-self_row)
-        if cached and all(v.get("source") == "pdf_extraction" and "self_row" in v
+        if cached and all(str(v.get("source", "")).startswith("pdf_extraction") and "self_row" in v
                           for v in cached.values()):
             return cached
         cache.unlink()
@@ -64,6 +64,19 @@ def fetch_actuals(ticker: str) -> dict[int, dict]:
                     "source": "pdf_extraction",
                     "self_row": is_self_row,
                 }
+
+    # Surgical manual overrides (documented exclusions — see data/manual_overrides.json)
+    overrides_file = Path("data/manual_overrides.json")
+    if overrides_file.exists():
+        overrides = json.loads(overrides_file.read_text()).get(ticker, {})
+        for y_str, fields in overrides.items():
+            if y_str.startswith("_"):
+                continue
+            y = int(y_str)
+            if y in actuals:
+                for field, value in fields.items():
+                    actuals[y][field] = value
+                actuals[y]["source"] = "pdf_extraction+override"
 
     cache.write_text(json.dumps(actuals))
     return actuals
