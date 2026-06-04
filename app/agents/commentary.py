@@ -15,14 +15,17 @@ def generate_commentary() -> str:
     if cache.exists():
         return cache.read_text()
 
-    # Build context from eval CSVs
     context_parts = []
     for csv_name in ("forecast_accuracy", "cap_summary", "earnings_surprise",
                      "trading_returns", "stock_prediction"):
         path = EVALS_DIR / f"{csv_name}.csv"
         if path.exists():
             df = pd.read_csv(path)
-            context_parts.append(f"=== {csv_name.upper()} ===\n{df.to_string(index=False)}")
+            if not df.empty:
+                context_parts.append(f"=== {csv_name.upper()} ===\n{df.to_string(index=False)}")
+
+    if not context_parts:
+        raise ValueError("No evaluation data found. Run the pipeline for at least one company first.")
 
     skill = load_skill(SKILL_PATH)
     prompt = f"{skill}\n\n{'='*60}\nEVALUATION DATA:\n{'='*60}\n\n" + "\n\n".join(context_parts)
