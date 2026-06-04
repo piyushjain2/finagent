@@ -17,7 +17,6 @@ from app.agents.metrics import (
 )
 from app.agents.commentary import generate_commentary
 from app.agents.report_writer import generate_report
-from app.agents.screener_fallback import populate_chromadb_from_screener
 
 COMPANY_URLS = Path("data/company_urls.json")
 FORECAST_BASE_YEARS = [2021, 2022]
@@ -38,28 +37,34 @@ async def run_pipeline(ticker: str) -> None:
     await bus.emit(ticker, "agent_start", {"ticker": ticker})
     try:
         # ── Stage 1+2: Download PDFs and RAG-index for all years ──────────────
-        # Falls back to Screener.in data when PDF is unavailable (JS-rendered pages)
+        # STRICT PDF-only policy: financial data comes ONLY from official annual
+        # reports. No Screener/yfinance fundamentals. Missing PDF = clear error.
+        years_with_data: list[int] = []
         for year in ALL_YEARS:
             try:
                 pdf_path = fetch_pdf(ticker, year)
                 await bus.emit(ticker, "on_pdf_fetched", {"year": year, "path": str(pdf_path)})
                 info = process_pdf(ticker, year, pdf_path)
                 await bus.emit(ticker, "on_rag_indexed", info)
+                years_with_data.append(year)
             except Exception as pdf_err:
-                # PDF unavailable — try Screener.in as data source
-                ok = populate_chromadb_from_screener(ticker, year)
-                if ok:
-                    await bus.emit(ticker, "on_rag_indexed",
-                                   {"ticker": ticker, "year": year,
-                                    "source": "screener.in", "cached": False})
-                else:
-                    await bus.emit(ticker, "warning",
-                                   {"year": year, "msg": f"PDF + Screener fallback failed: {pdf_err}"})
+                await bus.emit(ticker, "warning",
+                               {"year": year,
+                                "msg": f"Annual report PDF unavailable for FY{year}. "
+                                       f"Place it at data/pdfs/{ticker}_{year}.pdf and re-run. "
+                                       f"({pdf_err})"})
 
-        # ── Stage 3: Extract financials from ALL years ─────────────────────────
-        # 2021+2022 feed the forecasts; 2022-2025 provide actuals (Tier 1 source)
+        if not any(y in years_with_data for y in FORECAST_BASE_YEARS):
+            await bus.emit(ticker, "pipeline_error",
+                           {"ticker": ticker,
+                            "error": f"No forecasting-input PDFs (2021/2022) available for {ticker}. "
+                                     f"Download them to data/pdfs/ and re-run."})
+            return
+
+        # ── Stage 3: Extract financials from years that have PDFs ──────────────
+        # 2021+2022 feed the forecasts; 2022-2025 provide actuals
         extracts: dict[int, dict] = {}
-        for year in ALL_YEARS:
+        for year in years_with_data:
             try:
                 extracts[year] = extract_financials(ticker, year)
                 await bus.emit(ticker, "on_extract_complete",
