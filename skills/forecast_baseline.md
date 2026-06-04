@@ -14,6 +14,10 @@ Step 3: Use the FY{BASE_YEAR} growth rate as your primary projection assumption.
 Step 4: Project Revenue and Net Income forward for FY{FORECAST_YEARS} only.
 Step 5: Estimate EPS = Net Income / shares outstanding.
 Step 6: Set "base_year" to exactly {BASE_YEAR} in your JSON response.
+BANKS/NBFCs: use "Total Income" (Interest Earned + Other Income) as Revenues — banks have no Revenue from Operations line.
+
+RESPONSE FORMAT: Begin your response DIRECTLY with the opening brace { of the JSON. Do NOT write any reasoning, steps, or explanation before the JSON — put your reasoning inside the "reasoning" field instead.
+
 UNITS RULE: Express ALL monetary values in plain INR Crores (e.g., 853000 for ₹8.53 lakh crore).
 Never use thousands of crores, lakh crores, millions, or billions.
 

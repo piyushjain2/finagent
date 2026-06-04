@@ -92,7 +92,7 @@ def _forecast_one(ticker: str, year: int, strategy: str) -> dict:
     prompt += f"\n\n=== ANNUAL REPORT TEXT (FY{year} data only) ===\n{context}"
 
     raw = call_claude(prompt, ticker=ticker, year=year,
-                      agent=f"forecaster_{strategy}", max_tokens=2048)
+                      agent=f"forecaster_{strategy}", max_tokens=4000)
     result = _extract_json(raw)
 
     # Unit sanity check — retry ONCE with an explicit correction if broken
@@ -102,7 +102,7 @@ def _forecast_one(ticker: str, year: int, strategy: str) -> dict:
             f"FY{year} revenue was {base_rev:,.0f} crores. All forecast values must be "
             f"in plain INR Crores at the same scale (similar magnitude, NOT divided by 1000).")
         raw = call_claude(retry_prompt, ticker=ticker, year=year,
-                          agent=f"forecaster_{strategy}_retry", max_tokens=2048)
+                          agent=f"forecaster_{strategy}_retry", max_tokens=4000)
         result = _extract_json(raw)
 
     RESPONSES_DIR.mkdir(parents=True, exist_ok=True)
@@ -129,7 +129,7 @@ def run_stock_prediction(ticker: str, price_data: list[dict]) -> dict:
     prompt = f"{skill}\n\n=== 2024 DAILY CLOSING PRICES FOR {ticker} ===\n{rows}"
 
     raw = call_claude(prompt, ticker=ticker, year=2024,
-                      agent="stock_predictor", max_tokens=1024)
+                      agent="stock_predictor", max_tokens=2500)
     if not raw.strip():
         return {"ticker": ticker, "predictions": [], "reasoning": "LLM returned empty response."}
     result = _extract_json(raw)

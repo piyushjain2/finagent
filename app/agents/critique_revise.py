@@ -21,7 +21,7 @@ def critique_forecast(ticker: str, year: int, strategy: str, forecast: dict) -> 
         .replace("{FORECAST_JSON}", json.dumps(forecast, indent=2)))
 
     raw = call_claude(prompt, ticker=ticker, year=year,
-                      agent=f"critique_{strategy}", max_tokens=1024)
+                      agent=f"critique_{strategy}", max_tokens=3000)
     result = _extract_json(raw)
     RESPONSES_DIR.mkdir(parents=True, exist_ok=True)
     cache.write_text(json.dumps(result, indent=2))
@@ -40,7 +40,7 @@ def revise_forecast(ticker: str, year: int, strategy: str,
         .replace("{CRITIQUE_JSON}", json.dumps(critique, indent=2)))
 
     raw = call_claude(prompt, ticker=ticker, year=year,
-                      agent=f"revise_{strategy}", max_tokens=1024)
+                      agent=f"revise_{strategy}", max_tokens=3000)
     result = _extract_json(raw)
     RESPONSES_DIR.mkdir(parents=True, exist_ok=True)
     cache.write_text(json.dumps(result, indent=2))

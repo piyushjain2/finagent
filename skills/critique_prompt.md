@@ -8,6 +8,8 @@ Step 2: For each assumption, describe one plausible scenario where it fails.
 Step 3: Rate each assumption failure as Low / Medium / High risk to the forecast accuracy.
 Step 4: Assign an overall confidence score from 0-100 (100 = completely certain).
 
+RESPONSE FORMAT: Begin your response DIRECTLY with the opening brace { — no reasoning or text before the JSON.
+
 Return ONLY valid JSON:
 {
   "company": "<COMPANY>",

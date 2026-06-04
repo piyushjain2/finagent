@@ -20,7 +20,13 @@
     "2024": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/d57e49b6-fd89-4fa8-b591-4f590100db1e.pdf",
     "2025": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/bb9f9e0a-e4ce-4a4e-997e-0b5de8c2bec0.pdf"
   },
-  "HDFCBANK": {},
+  "HDFCBANK": {
+    "2021": "https://www.bseindia.com/bseplus/AnnualReport/500180/68609500180.pdf",
+    "2022": "https://www.bseindia.com/bseplus/AnnualReport/500180/73256500180.pdf",
+    "2023": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/0fb0e6bd-7110-44c3-a750-76933ddf105c.pdf",
+    "2024": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/2160dea5-d49e-4409-83a4-c2b111a3bd12.pdf",
+    "2025": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/411e22d2-0720-4cec-b659-9ccd639f0f1a.pdf"
+  },
   "ICICIBANK": {},
   "SBIN": {},
   "ITC": {},

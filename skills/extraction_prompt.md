@@ -8,6 +8,9 @@ Step 2: Extract the following for ALL financial years present in the report:
 Step 3: CONSISTENCY RULE — use the SAME revenue line item for every year. If the statement
         shows multiple revenue lines (e.g., "Revenue from Operations", "Total Income"),
         pick ONE and apply it to all years identically. State which one you used.
+        BANKS/NBFCs: they have no "Revenue from Operations" — use "Total Income"
+        (Interest Earned + Other Income) as Revenues. Never return 0 — if the standard
+        line is absent, find the bank-equivalent top-line.
 Step 4: Cross-check: Net Income must be less than Revenues. Flag if not.
 Step 5: Return ONLY valid JSON in this exact format:
 {

@@ -23,6 +23,10 @@ Step 5: Check balance-sheet capacity: high leverage or weak RoE constrains growt
         signals expansion.
 Step 6: Forecast Revenues, Net Profit, and EPS for FY{FORECAST_YEARS} (same revenue definition as Step 1).
 Step 7: State the top-2 assumptions driving your forecast.
+BANKS/NBFCs: use "Total Income" (Interest Earned + Other Income) as Revenues — banks have no Revenue from Operations line.
+
+RESPONSE FORMAT: Begin your response DIRECTLY with the opening brace { of the JSON. Do NOT write any reasoning, steps, or explanation before the JSON — put your reasoning inside the "reasoning" field instead.
+
 UNITS RULE: Express ALL monetary values in plain INR Crores (e.g., 853000 for ₹8.53 lakh crore).
 Never use thousands of crores, lakh crores, millions, or billions. A revenue forecast for a large
 company should be a 5-7 digit number in crores.

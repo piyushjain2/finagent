@@ -8,6 +8,8 @@ Step 2: For "Medium" risk assumptions, reduce growth by 10% for that driver.
 Step 3: Leave "Low" risk assumptions unchanged.
 Step 4: Calculate a confidence range: ± percentage based on the number of High (±15%) and Medium (±8%) risks.
 
+RESPONSE FORMAT: Begin your response DIRECTLY with the opening brace { — no reasoning or text before the JSON.
+
 Return ONLY valid JSON:
 {
   "strategy": "<strategy>",
