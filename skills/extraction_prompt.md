@@ -11,8 +11,15 @@ Step 3: CONSISTENCY RULE — use the SAME revenue line item for every year. If t
         BANKS/NBFCs: they have no "Revenue from Operations" — use "Total Income"
         (Interest Earned + Other Income) as Revenues. Never return 0 — if the standard
         line is absent, find the bank-equivalent top-line.
-Step 4: Cross-check: Net Income must be less than Revenues. Flag if not.
-Step 5: Return ONLY valid JSON in this exact format:
+Step 4: UNITS — the statement may be in ₹ million, ₹ lakh, ₹ thousand or ₹ crore (check the
+        table header carefully, e.g. "(₹ in million)"). CONVERT everything to ₹ CRORES:
+        1 crore = 10 million = 100 lakh = 10,000 thousand. EPS stays in ₹ per share (no conversion).
+        SANITY CHECK: a large listed company's annual revenue is typically 1,000–1,000,000 crores.
+        If your number looks 10× or 100× off from that range, re-check the unit conversion.
+Step 5: Cross-check: Net Income must be less than Revenues. Flag if not.
+        Cross-check: values across years should be the same order of magnitude
+        (a 10× jump between adjacent years usually means a unit error — re-check).
+Step 6: Return ONLY valid JSON in this exact format:
 {
   "company": "<company name>",
   "years": [
