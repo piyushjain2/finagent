@@ -19,7 +19,10 @@ def _add_heading(doc: Document, text: str, level: int):
 def _df_to_table(doc: Document, df: pd.DataFrame, max_rows: int = 25):
     df = df.head(max_rows)
     table = doc.add_table(rows=1, cols=len(df.columns))
-    table.style = "Light Grid Accent 1"
+    try:
+        table.style = "Light Grid Accent 1"
+    except KeyError:
+        table.style = "Table Grid"
     hdr = table.rows[0].cells
     for i, col in enumerate(df.columns):
         hdr[i].text = str(col)
@@ -33,7 +36,7 @@ def _df_to_table(doc: Document, df: pd.DataFrame, max_rows: int = 25):
 
 def _add_prompt_sample(doc: Document, ticker: str, agent: str):
     """Add one representative prompt+response sample for the given agent type."""
-    for f in Path(PROMPTS_DIR).glob(f"{ticker}_*_{agent}.jsonl"):
+    for f in PROMPTS_DIR.glob(f"{ticker}_*_{agent}.jsonl"):
         lines = [l for l in f.read_text().splitlines() if l.strip()]
         if lines:
             entry = json.loads(lines[0])
@@ -80,9 +83,10 @@ def generate_report() -> Path:
     _add_heading(doc, "Q1c. Alternate Strategy (Full-Report CoT vs P&L-only CoT)", 2)
     if acc_path.exists():
         df = pd.read_csv(acc_path)
-        comp = df[df["metric"] == "revenue"].groupby(["strategy", "horizon"])["pct_error"].apply(
-            lambda x: x.abs().mean()).reset_index()
-        comp.columns = ["strategy", "horizon", "avg_abs_pct_error"]
+        rev = df[df["metric"] == "revenue"].copy()
+        rev["abs_pct_error"] = rev["pct_error"].abs()
+        comp = rev.groupby(["strategy", "horizon"], as_index=False)["abs_pct_error"].mean()
+        comp.rename(columns={"abs_pct_error": "avg_abs_pct_error"}, inplace=True)
         _df_to_table(doc, comp)
 
     # Q1d — Earnings surprise
