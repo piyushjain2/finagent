@@ -17,6 +17,7 @@ from app.agents.metrics import (
 )
 from app.agents.commentary import generate_commentary
 from app.agents.report_writer import generate_report
+from app.agents.screener_fallback import populate_chromadb_from_screener
 
 COMPANY_URLS = Path("data/company_urls.json")
 FORECAST_BASE_YEARS = [2021, 2022]
@@ -37,14 +38,23 @@ async def run_pipeline(ticker: str) -> None:
     await bus.emit(ticker, "agent_start", {"ticker": ticker})
     try:
         # ── Stage 1+2: Download PDFs and RAG-index for all years ──────────────
+        # Falls back to Screener.in data when PDF is unavailable (JS-rendered pages)
         for year in ALL_YEARS:
             try:
                 pdf_path = fetch_pdf(ticker, year)
                 await bus.emit(ticker, "on_pdf_fetched", {"year": year, "path": str(pdf_path)})
                 info = process_pdf(ticker, year, pdf_path)
                 await bus.emit(ticker, "on_rag_indexed", info)
-            except Exception as e:
-                await bus.emit(ticker, "warning", {"year": year, "msg": str(e)})
+            except Exception as pdf_err:
+                # PDF unavailable — try Screener.in as data source
+                ok = populate_chromadb_from_screener(ticker, year)
+                if ok:
+                    await bus.emit(ticker, "on_rag_indexed",
+                                   {"ticker": ticker, "year": year,
+                                    "source": "screener.in", "cached": False})
+                else:
+                    await bus.emit(ticker, "warning",
+                                   {"year": year, "msg": f"PDF + Screener fallback failed: {pdf_err}"})
 
         # ── Stage 3: Extract financials from forecasting-input years (2021+2022) ──
         extracts: dict[int, dict] = {}
