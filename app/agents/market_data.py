@@ -41,7 +41,11 @@ def fetch_actuals(ticker: str) -> dict[int, dict]:
     for year in ACTUAL_YEARS:
         extract_file = RESPONSES_DIR / f"{ticker}_{year}_extract.json"
         if extract_file.exists():
-            data = json.loads(extract_file.read_text())
+            try:
+                data = json.loads(extract_file.read_text())
+            except json.JSONDecodeError:
+                extract_file.unlink()
+                continue
             for row in data.get("years", []):
                 y = row.get("year")
                 if y and row.get("revenue_cr") is not None:

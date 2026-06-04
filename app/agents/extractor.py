@@ -2,7 +2,7 @@ import json
 from pathlib import Path
 from app.claude_client import call_claude, load_skill, HAIKU_MODEL
 from app.agents.rag_processor import query_chunks
-from app.agents.forecaster import _extract_json
+from app.agents.forecaster import _extract_json, _load_cache_json
 
 RESPONSES_DIR = Path("data/responses")
 SKILL_PATH = Path("skills/extraction_prompt.md")
@@ -13,7 +13,9 @@ def extract_financials(ticker: str, year: int) -> dict:
     RESPONSES_DIR.mkdir(parents=True, exist_ok=True)
     cache = RESPONSES_DIR / f"{ticker}_{year}_extract.json"
     if cache.exists():
-        return json.loads(cache.read_text())
+        cached = _load_cache_json(cache)
+        if isinstance(cached, dict):
+            return cached
 
     chunks = query_chunks(ticker, year,
         "revenues net profit attributable to owners earnings per share "

@@ -8,9 +8,11 @@ from app.agents.rag_processor import query_chunks
 def _extract_json(raw: str) -> dict:
     """
     Robustly extract a JSON object from a Claude response.
-    Handles: pure JSON, ```json fenced, prose-then-JSON, JSON-in-prose.
+    Handles: pure JSON, ```json fenced, prose-then-JSON, JSON-in-prose,
+    and trailing garbage after the object ("Extra data") via raw_decode.
     """
     text = raw.strip()
+    decoder = json.JSONDecoder()
 
     # 1. Strip markdown fences and try direct parse
     clean = text.removeprefix("```json").removeprefix("```").removesuffix("```").strip()
@@ -19,21 +21,45 @@ def _extract_json(raw: str) -> dict:
     except json.JSONDecodeError:
         pass
 
-    # 2. Find ```json ... ``` or ``` ... ``` blocks
+    # 2. raw_decode parses the FIRST valid object, ignoring trailing content
+    #    (handles concatenated objects and prose after the JSON)
+    if clean.startswith("{"):
+        try:
+            obj, _ = decoder.raw_decode(clean)
+            return obj
+        except json.JSONDecodeError:
+            pass
+
+    # 3. Find ```json ... ``` or ``` ... ``` blocks
     for m in re.finditer(r"```(?:json)?\s*([\s\S]*?)```", text):
         try:
             return json.loads(m.group(1).strip())
         except json.JSONDecodeError:
             continue
 
-    # 3. Find the last {...} block in the text (handles "Here is my answer: {...}")
-    for m in reversed(list(re.finditer(r"\{[\s\S]*\}", text))):
+    # 4. raw_decode from each '{' position — finds first parseable object anywhere
+    for m in re.finditer(r"\{", text):
         try:
-            return json.loads(m.group(0))
+            obj, _ = decoder.raw_decode(text[m.start():])
+            if isinstance(obj, dict):
+                return obj
         except json.JSONDecodeError:
             continue
 
     raise ValueError(f"No valid JSON found in response (first 200 chars): {text[:200]}")
+
+
+def _load_cache_json(path: Path) -> dict | None:
+    """Read a cached JSON file; delete and return None if corrupt
+    (e.g. from an interrupted write or two processes racing)."""
+    try:
+        return json.loads(path.read_text())
+    except (json.JSONDecodeError, OSError):
+        try:
+            path.unlink()
+        except OSError:
+            pass
+        return None
 
 RESPONSES_DIR = Path("data/responses")
 BASELINE_SKILL = Path("skills/forecast_baseline.md")
@@ -45,7 +71,9 @@ def _base_year_revenue(ticker: str, year: int) -> float | None:
     extract = RESPONSES_DIR / f"{ticker}_{year}_extract.json"
     if not extract.exists():
         return None
-    data = json.loads(extract.read_text())
+    data = _load_cache_json(extract)
+    if not data:
+        return None
     for row in data.get("years", []):
         if row.get("year") == year and row.get("revenue_cr"):
             return float(row["revenue_cr"])
@@ -68,11 +96,12 @@ def _forecast_one(ticker: str, year: int, strategy: str) -> dict:
     cache = RESPONSES_DIR / f"{ticker}_{year}_{strategy}_forecast.json"
     base_rev = _base_year_revenue(ticker, year)
     if cache.exists():
-        cached = json.loads(cache.read_text())
+        cached = _load_cache_json(cache)
         # Reject null/empty/invalid/unit-broken cache — re-run instead
         if isinstance(cached, dict) and cached.get("forecast") and _units_sane(cached, base_rev):
             return cached
-        cache.unlink()
+        if cache.exists():
+            cache.unlink()
 
     if strategy == "baseline":
         query = "revenues net profit consolidated statement of profit and loss"
@@ -119,7 +148,9 @@ def run_stock_prediction(ticker: str, price_data: list[dict]) -> dict:
     """Q2: predict Jan/Mar/Dec 2025 from 2024 daily prices."""
     cache = RESPONSES_DIR / f"{ticker}_stock_prediction.json"
     if cache.exists():
-        return json.loads(cache.read_text())
+        cached = _load_cache_json(cache)
+        if isinstance(cached, dict):
+            return cached
 
     if not price_data:
         return {"ticker": ticker, "predictions": [], "reasoning": "No 2024 price data available."}

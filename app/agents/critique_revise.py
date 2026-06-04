@@ -2,7 +2,7 @@
 import json
 from pathlib import Path
 from app.claude_client import call_claude, load_skill
-from app.agents.forecaster import _extract_json
+from app.agents.forecaster import _extract_json, _load_cache_json
 
 RESPONSES_DIR = Path("data/responses")
 CRITIQUE_SKILL = Path("skills/critique_prompt.md")
@@ -12,7 +12,9 @@ REVISE_SKILL = Path("skills/revise_prompt.md")
 def critique_forecast(ticker: str, year: int, strategy: str, forecast: dict) -> dict:
     cache = RESPONSES_DIR / f"{ticker}_{year}_{strategy}_critique.json"
     if cache.exists():
-        return json.loads(cache.read_text())
+        cached = _load_cache_json(cache)
+        if isinstance(cached, dict):
+            return cached
 
     skill = load_skill(CRITIQUE_SKILL)
     prompt = (skill
@@ -32,7 +34,9 @@ def revise_forecast(ticker: str, year: int, strategy: str,
                     forecast: dict, critique: dict) -> dict:
     cache = RESPONSES_DIR / f"{ticker}_{year}_{strategy}_revised_forecast.json"
     if cache.exists():
-        return json.loads(cache.read_text())
+        cached = _load_cache_json(cache)
+        if isinstance(cached, dict):
+            return cached
 
     skill = load_skill(REVISE_SKILL)
     prompt = (skill
