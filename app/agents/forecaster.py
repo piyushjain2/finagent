@@ -167,3 +167,59 @@ def run_stock_prediction(ticker: str, price_data: list[dict]) -> dict:
     RESPONSES_DIR.mkdir(parents=True, exist_ok=True)
     cache.write_text(json.dumps(result, indent=2))
     return result
+
+
+def _structured_history(ticker: str, year: int) -> str:
+    """Clean extracted financials from the base-year report as a prompt table."""
+    extract = RESPONSES_DIR / f"{ticker}_{year}_extract.json"
+    data = _load_cache_json(extract) if extract.exists() else None
+    if not data:
+        return ""
+    lines = ["Year | Revenue (Cr) | Net Income (Cr) | EPS",
+             "-----|--------------|-----------------|----"]
+    for row in sorted(data.get("years", []), key=lambda r: r.get("year") or 0):
+        if row.get("year") and row.get("year") <= year:
+            lines.append(f"FY{row['year']} | {row.get('revenue_cr')} | "
+                         f"{row.get('net_income_cr')} | {row.get('eps')}")
+    defn = data.get("revenue_definition", "")
+    return "\n".join(lines) + (f"\n(Revenue line item: {defn})" if defn else "")
+
+
+def _forecast_alt_v2(ticker: str, year: int) -> dict:
+    """Strategy v2: clean structured financials + MD&A outlook chunks.
+    The 'more data' improvement the assignment invites — replicates full-P&L
+    visibility without raw-chunk unit noise, behind the same anti-leakage rules."""
+    cache = RESPONSES_DIR / f"{ticker}_{year}_alt_v2_forecast.json"
+    base_rev = _base_year_revenue(ticker, year)
+    if cache.exists():
+        cached = _load_cache_json(cache)
+        if isinstance(cached, dict) and cached.get("forecast") and _units_sane(cached, base_rev):
+            return cached
+        if cache.exists():
+            cache.unlink()
+
+    history = _structured_history(ticker, year)
+    chunks = query_chunks(ticker, year,
+        "management discussion analysis outlook guidance growth capex plans risks", n=6)
+    context = "\n\n---\n\n".join(chunks)
+
+    skill = load_skill(Path("skills/forecast_alt_v2.md"))
+    forecast_years = f"{year+1}, {year+2}, {year+3}"
+    prompt = (skill
+              .replace("{FORECAST_YEARS}", forecast_years)
+              .replace("{BASE_YEAR}", str(year)))
+    prompt += f"\n\n=== STRUCTURED FINANCIALS (from FY{year} report, INR Crores) ===\n{history}"
+    prompt += f"\n\n=== MD&A / OUTLOOK EXCERPTS (FY{year} report) ===\n{context}"
+
+    raw = call_claude(prompt, ticker=ticker, year=year,
+                      agent="forecaster_alt_v2", max_tokens=4000)
+    result = _extract_json(raw)
+    if not _units_sane(result, base_rev):
+        retry = prompt + (f"\n\nCORRECTION: FY{year} revenue was {base_rev:,.0f} crores. "
+                          f"All values must be plain INR Crores at similar magnitude.")
+        raw = call_claude(retry, ticker=ticker, year=year,
+                          agent="forecaster_alt_v2_retry", max_tokens=4000)
+        result = _extract_json(raw)
+    RESPONSES_DIR.mkdir(parents=True, exist_ok=True)
+    cache.write_text(json.dumps(result, indent=2))
+    return result

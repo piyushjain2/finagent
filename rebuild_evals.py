@@ -62,9 +62,11 @@ FORECAST_BASE_YEARS = [2021, 2022]
 
 
 def _load_forecasts(ticker: str, base_year: int) -> dict:
-    """Load revised forecasts (fall back to plain) for both strategies."""
+    """Load forecasts for all three strategies.
+    baseline/alt_strategy use the critique-revised version when present;
+    alt_v2 is raw by design (structured-data strategy, no adversarial step)."""
     out = {}
-    for strategy in ("baseline", "alt_strategy"):
+    for strategy in ("baseline", "alt_strategy", "alt_v2"):
         for suffix in (f"{strategy}_revised_forecast", f"{strategy}_forecast"):
             p = RESPONSES_DIR / f"{ticker}_{base_year}_{suffix}.json"
             if p.exists():
