@@ -10,7 +10,25 @@ from pathlib import Path
 
 PDF_DIR = Path("data/pdfs")
 URLS_FILE = Path("data/company_urls.json")
+URL_CACHE = Path("data/pdf_url_cache.json")
 HEADERS = {"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"}
+
+
+def _cached_url(ticker: str, year: int) -> str | None:
+    """Return pre-discovered URL from cache file if available."""
+    if not URL_CACHE.exists():
+        return None
+    cache = json.loads(URL_CACHE.read_text())
+    return cache.get(ticker, {}).get(str(year))
+
+
+def _save_to_cache(ticker: str, year: int, url: str) -> None:
+    """Persist a discovered URL to cache so it's reused on next run."""
+    cache: dict = {}
+    if URL_CACHE.exists():
+        cache = json.loads(URL_CACHE.read_text())
+    cache.setdefault(ticker, {})[str(year)] = url
+    URL_CACHE.write_text(json.dumps(cache, indent=2))
 
 
 # Some companies use a different ticker on Screener.in than their NSE symbol
@@ -94,10 +112,16 @@ def fetch_pdf(ticker: str, year: int) -> Path:
     if dest.exists() and dest.stat().st_size > 10_000:
         return dest
 
-    # Strategy 1: Screener.in → BSE direct link
-    pdf_url = _screener_annual_report_url(ticker, year)
+    # Strategy 1: URL cache (pre-seeded + previously discovered)
+    pdf_url = _cached_url(ticker, year)
 
-    # Strategy 2: Company IR page scraping
+    # Strategy 2: Screener.in → BSE direct link (live discovery)
+    if not pdf_url:
+        pdf_url = _screener_annual_report_url(ticker, year)
+        if pdf_url:
+            _save_to_cache(ticker, year, pdf_url)
+
+    # Strategy 3: Company IR page scraping
     if not pdf_url:
         pdf_url = _company_ir_url(ticker, year)
 
