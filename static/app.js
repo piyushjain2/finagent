@@ -358,9 +358,12 @@ function showPrompts() {
     }
     // Sort by timestamp, group view
     logs.sort((a, b) => (a.timestamp || "").localeCompare(b.timestamp || ""));
-    let html = `<p style="font-size:11.5px;color:#64748b;margin-bottom:14px">
+    let html = `<p style="font-size:11.5px;color:#64748b;margin-bottom:10px">
         Every LLM interaction, logged verbatim (${logs.length} calls). Same prompt templates
-        used for all 20 companies.</p>`;
+        used for all 20 companies. Long prompts are truncated here —
+        <button class="btn" style="padding:4px 12px;font-size:11px"
+          onclick="window.open('/prompts/${activeTicker}/print','_blank')">
+          🖨 Open complete record (print / save as PDF)</button></p>`;
     for (const e of logs) {
       const label = AGENT_LABELS[e.agent] || e.agent;
       html += `

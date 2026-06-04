@@ -84,6 +84,59 @@ async def get_evals():
     return result
 
 
+@app.get("/prompts/{ticker}/print")
+async def print_prompts(ticker: str):
+    """Print-friendly page with COMPLETE prompts & responses — use the browser's
+    Print → Save as PDF for a complete, paginated record (or full-page screenshot)."""
+    t = ticker.upper()
+    logs = []
+    for f in sorted(Path("data/prompts").glob(f"{t}_*.jsonl")):
+        logs.extend(json.loads(l) for l in f.read_text().splitlines() if l.strip())
+    logs.sort(key=lambda e: e.get("timestamp", ""))
+
+    import html as html_mod
+    cards = []
+    for e in logs:
+        cards.append(f"""
+        <div class="card">
+          <div class="head">
+            <span class="agent">{html_mod.escape(e.get('agent',''))}</span>
+            <span class="meta">{html_mod.escape(e.get('model',''))} · FY{e.get('year')} ·
+              {html_mod.escape((e.get('timestamp') or '')[:19].replace('T',' '))}</span>
+          </div>
+          <div class="label">QUERY (complete)</div>
+          <pre class="q">{html_mod.escape(e.get('prompt',''))}</pre>
+          <div class="label">RESPONSE (complete)</div>
+          <pre class="r">{html_mod.escape(e.get('response',''))}</pre>
+        </div>""")
+
+    page = f"""<!DOCTYPE html><html><head><meta charset="utf-8">
+    <title>{t} — Complete Queries &amp; Responses</title>
+    <style>
+      body{{font-family:-apple-system,'Segoe UI',sans-serif;max-width:900px;margin:24px auto;
+           padding:0 16px;color:#1e293b}}
+      h1{{font-size:20px}} .sub{{color:#64748b;font-size:13px;margin-bottom:24px}}
+      .card{{border:1px solid #e2e8f0;border-radius:10px;padding:16px;margin-bottom:20px;
+            page-break-inside:avoid}}
+      .head{{display:flex;justify-content:space-between;flex-wrap:wrap;margin-bottom:10px}}
+      .agent{{font-weight:700;color:#1a5276;font-size:14px}}
+      .meta{{color:#94a3b8;font-size:11px;font-family:monospace}}
+      .label{{font-size:10px;font-weight:700;letter-spacing:.08em;color:#64748b;margin:10px 0 4px}}
+      pre{{font-family:ui-monospace,Menlo,monospace;font-size:10px;line-height:1.5;
+          white-space:pre-wrap;word-break:break-word;border-radius:6px;padding:10px;margin:0}}
+      .q{{background:#f8fafc;border:1px solid #e2e8f0}}
+      .r{{background:#f0fdf4;border:1px solid #bbf7d0}}
+      @media print{{ .card{{page-break-inside:auto}} pre{{font-size:8.5px}} }}
+    </style></head><body>
+    <h1>📝 {t} — Complete LLM Queries &amp; Responses</h1>
+    <p class="sub">{len(logs)} interactions, logged verbatim by FinAgent's Prompt Vault.
+    Identical prompt templates were used across all 20 companies.
+    Print this page (Cmd+P → Save as PDF) for a complete record.</p>
+    {''.join(cards)}
+    </body></html>"""
+    return HTMLResponse(page)
+
+
 @app.get("/prompts/{ticker}")
 async def get_prompts(ticker: str):
     logs = []
