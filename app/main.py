@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse
 from sse_starlette.sse import EventSourceResponse
@@ -57,8 +57,10 @@ async def stream(ticker: str):
 @app.get("/evals")
 async def get_evals():
     result = {}
-    for csv in Path("data/evals").glob("*.csv"):
-        result[csv.stem] = pd.read_csv(csv).to_dict(orient="records")
+    evals_dir = Path("data/evals")
+    if evals_dir.exists():
+        for csv in evals_dir.glob("*.csv"):
+            result[csv.stem] = pd.read_csv(csv).to_dict(orient="records")
     return result
 
 
@@ -82,8 +84,14 @@ async def generate_report_endpoint():
 @app.get("/report/download")
 async def download_report():
     from fastapi.responses import FileResponse
+    report_path = Path("output/report.docx")
+    if not report_path.exists():
+        raise HTTPException(
+            status_code=404,
+            detail="Report not generated yet. Run the pipeline first, then click 'Generate report'."
+        )
     return FileResponse(
-        "output/report.docx",
+        str(report_path),
         media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         filename="FinA_Group11_Report.docx",
     )
