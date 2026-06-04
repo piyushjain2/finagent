@@ -74,11 +74,17 @@ async def get_prompts(ticker: str):
 
 @app.post("/generate-report")
 async def generate_report_endpoint():
-    from app.orchestrator import run_all_and_report
-    import json as j
-    tickers = list(j.loads(Path("data/company_urls.json").read_text()).keys())
-    asyncio.create_task(run_all_and_report(tickers))
+    from app.orchestrator import generate_report_only
+    asyncio.create_task(generate_report_only())
     return {"status": "generating"}
+
+
+@app.get("/report/status")
+async def report_status():
+    report_path = Path("output/report.docx")
+    if report_path.exists():
+        return {"ready": True, "size_kb": report_path.stat().st_size // 1024}
+    return {"ready": False}
 
 
 @app.get("/report/download")

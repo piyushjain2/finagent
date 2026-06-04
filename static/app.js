@@ -95,14 +95,40 @@ function analyzeAll() {
 }
 
 function generateReport() {
-  addBubble("Generating commentary and report — this may take a minute…", "bot");
+  addBubble("⟳ Generating commentary and report — this may take a minute…", "bot");
   fetch("/generate-report", {method:"POST"})
     .then(r => r.json())
-    .then(d => addBubble(`✅ Report generated: <a href="/report/download">Download report.docx</a>`, "bot"))
-    .catch(() => addBubble("Report generation failed — run all companies first.", "bot"));
+    .then(d => {
+      if (d.status === "generating") {
+        addBubble("⟳ Report generation started in background. Watch for the download link…", "bot");
+        // Poll until the report is ready
+        const poll = setInterval(() => {
+          fetch("/report/status").then(r => r.json()).then(s => {
+            if (s.ready) {
+              clearInterval(poll);
+              addBubble(`✅ Report ready! <a href="/report/download" target="_blank">⬇ Download report.docx</a>`, "bot");
+            } else if (s.error) {
+              clearInterval(poll);
+              addBubble(`❌ Report generation failed: ${s.error}`, "bot");
+            }
+          }).catch(() => clearInterval(poll));
+        }, 3000);
+      }
+    })
+    .catch(e => addBubble(`❌ Could not start report generation: ${e}`, "bot"));
 }
 
-function downloadReport() { window.open("/report/download"); }
+function downloadReport() {
+  fetch("/report/status").then(r => r.json()).then(s => {
+    if (s.ready) {
+      window.location.href = "/report/download";
+    } else {
+      addBubble("⚠ No report yet. Analyze at least one company first, then click 📄 Generate report.", "bot");
+    }
+  }).catch(() => {
+    addBubble("⚠ No report yet. Analyze at least one company first, then click 📄 Generate report.", "bot");
+  });
+}
 
 // ── SSE streaming ─────────────────────────────────────────────────────────────
 

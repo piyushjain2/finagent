@@ -168,7 +168,28 @@ async def run_all_and_report(tickers: list[str]) -> Path:
         try:
             await run_pipeline(ticker)
         except Exception as e:
-            # Already emitted pipeline_error inside run_pipeline; keep going
             print(f"[run_all_and_report] {ticker} failed: {e}")
-    generate_commentary()
+    return await generate_report_only()
+
+
+async def generate_report_only() -> Path:
+    """
+    Generate commentary + report from whatever eval data exists.
+    Called by the 'Generate report' button — does NOT re-run any pipelines.
+    Safe to call at any time; commentary is skipped gracefully if no eval data yet.
+    """
+    try:
+        generate_commentary()
+    except ValueError as e:
+        # No eval data yet — write a placeholder narrative so report still builds
+        from pathlib import Path as P
+        commentary_dir = P("data/commentary")
+        commentary_dir.mkdir(parents=True, exist_ok=True)
+        cache = commentary_dir / "analyst_narrative.md"
+        if not cache.exists():
+            cache.write_text(
+                "Commentary will be generated once company pipelines have completed. "
+                "Run 'Analyze all 20' or analyze individual companies first."
+            )
+        print(f"[generate_report_only] Commentary skipped: {e}")
     return generate_report()
