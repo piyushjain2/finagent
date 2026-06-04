@@ -71,7 +71,10 @@ async def get_evals():
     evals_dir = Path("data/evals")
     if evals_dir.exists():
         for csv in evals_dir.glob("*.csv"):
-            result[csv.stem] = pd.read_csv(csv).to_dict(orient="records")
+            df = pd.read_csv(csv)
+            # NaN is not JSON-serializable — convert to None
+            df = df.where(pd.notna(df), None)
+            result[csv.stem] = df.to_dict(orient="records")
     return result
 
 
