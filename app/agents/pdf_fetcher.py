@@ -1,39 +1,69 @@
+# app/agents/pdf_fetcher.py
+"""
+Downloads annual report PDFs via Screener.in Documents section → BSE direct links.
+Works for all NSE-listed companies without needing company-specific IR URLs.
+"""
 import json
-import re
 import requests
 from bs4 import BeautifulSoup
 from pathlib import Path
 
 PDF_DIR = Path("data/pdfs")
 URLS_FILE = Path("data/company_urls.json")
+HEADERS = {"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"}
 
 
-def fetch_pdf(ticker: str, year: int) -> Path:
-    """Download annual report PDF. Returns path. Skips if already exists."""
-    PDF_DIR.mkdir(parents=True, exist_ok=True)
-    dest = PDF_DIR / f"{ticker}_{year}.pdf"
-    if dest.exists():
-        return dest
+# Some companies use a different ticker on Screener.in than their NSE symbol
+_SCREENER_TICKER_MAP = {
+    "REC": "RECLTD",
+}
 
+def _screener_annual_report_url(ticker: str, year: int) -> str | None:
+    """
+    Scrape Screener.in Documents section to find the BSE annual report PDF
+    for the given financial year (year = FY ending, e.g. 2021 = FY2020-21).
+    Tries both the NSE ticker and any known Screener.in alias.
+    """
+    year_str = str(year)
+    candidates = [ticker]
+    if ticker in _SCREENER_TICKER_MAP:
+        candidates = [_SCREENER_TICKER_MAP[ticker], ticker]
+
+    for candidate in candidates:
+        url = f"https://www.screener.in/company/{candidate}/"
+        try:
+            resp = requests.get(url, timeout=20, headers=HEADERS)
+            resp.raise_for_status()
+        except Exception:
+            continue
+
+        soup = BeautifulSoup(resp.text, "html.parser")
+        for section in soup.find_all("section"):
+            h2 = section.find("h2")
+            if not h2 or "Document" not in h2.get_text():
+                continue
+            for a in section.find_all("a", href=True):
+                text = a.get_text(strip=True)
+                href = a["href"]
+                if year_str in text and "Financial Year" in text and href.lower().endswith(".pdf"):
+                    return href
+            break
+
+    return None
+
+
+def _company_ir_url(ticker: str, year: int) -> str | None:
+    """
+    Fallback: try the IR URL from company_urls.json using BeautifulSoup scraping.
+    """
+    if not URLS_FILE.exists():
+        return None
     company_urls = json.loads(URLS_FILE.read_text())
     if ticker not in company_urls:
-        raise ValueError(f"No IR URL configured for {ticker}")
-
+        return None
     ir_url = company_urls[ticker]["ir_url"]
-    pdf_url = _find_pdf_url(ir_url, year)
-    if not pdf_url:
-        raise RuntimeError(f"Could not find {year} annual report PDF for {ticker} at {ir_url}")
-
-    resp = requests.get(pdf_url, timeout=60, headers={"User-Agent": "Mozilla/5.0"})
-    resp.raise_for_status()
-    dest.write_bytes(resp.content)
-    return dest
-
-
-def _find_pdf_url(ir_url: str, year: int) -> str | None:
-    """Scrape IR page to find annual report PDF link for the given year."""
     try:
-        resp = requests.get(ir_url, timeout=30, headers={"User-Agent": "Mozilla/5.0"})
+        resp = requests.get(ir_url, timeout=20, headers=HEADERS)
         resp.raise_for_status()
         soup = BeautifulSoup(resp.text, "html.parser")
         year_str = str(year)
@@ -41,7 +71,49 @@ def _find_pdf_url(ir_url: str, year: int) -> str | None:
             href = a["href"]
             text = a.get_text(strip=True)
             if (year_str in text or year_str in href) and href.lower().endswith(".pdf"):
-                return href if href.startswith("http") else ir_url.rstrip("/") + "/" + href.lstrip("/")
+                if href.startswith("http"):
+                    return href
+                return ir_url.rstrip("/") + "/" + href.lstrip("/")
     except Exception:
         pass
     return None
+
+
+def fetch_pdf(ticker: str, year: int) -> Path:
+    """
+    Download annual report PDF for (ticker, year). Returns local path.
+    Skips download if file already exists (checkpoint).
+
+    Strategy:
+    1. Screener.in Documents section → BSE direct link (works for all NSE companies)
+    2. Company IR page scraping (fallback)
+    3. Raises RuntimeError with helpful message if neither works
+    """
+    PDF_DIR.mkdir(parents=True, exist_ok=True)
+    dest = PDF_DIR / f"{ticker}_{year}.pdf"
+    if dest.exists() and dest.stat().st_size > 10_000:
+        return dest
+
+    # Strategy 1: Screener.in → BSE direct link
+    pdf_url = _screener_annual_report_url(ticker, year)
+
+    # Strategy 2: Company IR page scraping
+    if not pdf_url:
+        pdf_url = _company_ir_url(ticker, year)
+
+    if not pdf_url:
+        raise RuntimeError(
+            f"Could not find {year} annual report PDF for {ticker}. "
+            f"Place it manually at {dest}"
+        )
+
+    resp = requests.get(pdf_url, timeout=120, headers=HEADERS, allow_redirects=True)
+    resp.raise_for_status()
+
+    if b"%PDF" not in resp.content[:8]:
+        raise RuntimeError(
+            f"Downloaded content for {ticker} {year} is not a valid PDF (url: {pdf_url})"
+        )
+
+    dest.write_bytes(resp.content)
+    return dest
