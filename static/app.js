@@ -123,10 +123,10 @@ function downloadReport() {
     if (s.ready) {
       window.location.href = "/report/download";
     } else {
-      addBubble("⚠ No report yet. Analyze at least one company first, then click 📄 Generate report.", "bot");
+      addBubble("⚠ No report ready yet. Analyze a company first, then click <b>📄 Generate report</b> in the completion bubble or the quick chips.", "bot");
     }
   }).catch(() => {
-    addBubble("⚠ No report yet. Analyze at least one company first, then click 📄 Generate report.", "bot");
+    addBubble("⚠ Could not check report status. Make sure the server is running.", "bot");
   });
 }
 
@@ -213,7 +213,14 @@ function handleEvent(ticker, payload) {
     case "on_metrics_ready":
       html = `<span class="agent-label al-met">⑦ Metrics</span><br>✅ Accuracy tables updated`; break;
     case "pipeline_complete":
-      html = `<span class="agent-label al-rep">✅ Pipeline Complete</span><br>${ticker} analysis done. <a href="/report/download">Download report</a>`; break;
+      html = `<span class="agent-label al-rep">✅ Pipeline Complete</span><br>
+        <strong>${ticker}</strong> analysis done.<br><br>
+        <button onclick="generateReport()" style="background:#1a5276;color:#fff;border:none;padding:7px 16px;border-radius:8px;cursor:pointer;font-size:13px;margin-right:8px">
+          📄 Generate report
+        </button>
+        <button onclick="showEvals()" style="background:#f0f2f5;color:#374151;border:1px solid #e9edef;padding:7px 16px;border-radius:8px;cursor:pointer;font-size:13px">
+          📊 View evals
+        </button>`; break;
     case "pipeline_error":
       html = `⚠️ Pipeline error: ${data.error||"unknown"}`; break;
     case "warning":
