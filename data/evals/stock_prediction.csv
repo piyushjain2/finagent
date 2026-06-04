@@ -1,0 +1,4 @@
+ticker,forecast_target,predicted_price,actual_price,pct_error,direction_correct,confidence
+RELIANCE,Jan-2025,1185,1260.0673828125,5.96,False,Medium
+RELIANCE,Mar-2025,1165,1270.027587890625,8.27,False,Low
+RELIANCE,Dec-2025,1150,1539.800048828125,25.31,False,Low

@@ -32,10 +32,21 @@ def _chunk_text(text: str) -> list[str]:
 
 
 def process_pdf(ticker: str, year: int, pdf_path: Path) -> dict:
-    """Chunk, embed and index PDF into ChromaDB. Idempotent."""
+    """
+    Chunk, embed and index PDF into ChromaDB. Idempotent.
+    If the existing index was built from the Screener.in fallback (ids prefixed
+    'screener_') and a real PDF is now available, wipe and re-index from the PDF —
+    the PDF has consolidated financials and is the authoritative source.
+    """
     col = _get_collection(ticker, year)
     if col.count() > 0:
-        return {"ticker": ticker, "year": year, "n_chunks": col.count(), "cached": True}
+        sample = col.get(limit=1)
+        ids = sample.get("ids", [])
+        built_from_screener = bool(ids) and ids[0].startswith("screener_")
+        if not built_from_screener:
+            return {"ticker": ticker, "year": year, "n_chunks": col.count(), "cached": True}
+        # Real PDF supersedes Screener data — wipe and re-index
+        col.delete(ids=col.get()["ids"])
 
     text = _extract_text(pdf_path)
     chunks = _chunk_text(text)
