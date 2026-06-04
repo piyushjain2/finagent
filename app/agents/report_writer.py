@@ -189,20 +189,48 @@ def generate_report() -> Path:
     # ── Q1 ──────────────────────────────────────────────────────────────────
     _add_heading(doc, "Q1. LLM Reasoning and Prediction", 1)
 
-    # Q1a — per-company prediction + comparison tables
+    # Q1a — consolidated tables: one row per company (page-budget friendly)
     _add_heading(doc, "Q1a. Forecast Tables — Revenue & Net Income", 2)
+    doc.add_paragraph(
+        "Percentage Difference = ((Actual − Predicted) / Actual) × 100. "
+        "All monetary values in ₹ Crores. N/A = actual not yet published or data unavailable."
+    )
 
-    company_urls = json.loads(Path("data/company_urls.json").read_text())
-    tickers = list(company_urls.keys())
-
-    for base_year in FORECAST_BASE_YEARS:
-        forecast_years = [base_year + 1, base_year + 2, base_year + 3]
-        _add_heading(doc,
-            f"Using FY{base_year} Annual Report → Predict "
-            f"FY{forecast_years[0]}, FY{forecast_years[1]}, FY{forecast_years[2]}", 3)
-        for ticker in tickers:
-            _add_heading(doc, ticker, 4)
-            _forecast_comparison_table(doc, ticker, base_year)
+    acc_path = EVALS_DIR / "forecast_accuracy.csv"
+    if acc_path.exists():
+        acc = pd.read_csv(acc_path)
+        for base_year in FORECAST_BASE_YEARS:
+            fy = [base_year + 1, base_year + 2, base_year + 3]
+            _add_heading(doc,
+                f"Using FY{base_year} Annual Report → Predict FY{fy[0]}, FY{fy[1]}, FY{fy[2]}", 3)
+            for strategy, slabel in [("baseline", "Baseline (P&L-only CoT)"),
+                                      ("alt_strategy", "Alt Strategy (Full-Report CoT)")]:
+                for metric, mlabel in [("revenue", "Revenue"), ("net_income", "Net Income")]:
+                    sub = acc[(acc["base_year"] == base_year) &
+                              (acc["strategy"] == strategy) &
+                              (acc["metric"] == metric)]
+                    if sub.empty:
+                        continue
+                    _add_heading(doc, f"{slabel} — {mlabel} (₹ Cr)", 4)
+                    rows = []
+                    for ticker in sorted(sub["ticker"].unique()):
+                        row = [ticker]
+                        tsub = sub[sub["ticker"] == ticker]
+                        for year in fy:
+                            r = tsub[tsub["forecast_year"] == year]
+                            if r.empty:
+                                row += ["N/A", "N/A", "N/A"]
+                            else:
+                                r = r.iloc[0]
+                                pred = f"{r['predicted']:,.0f}" if pd.notna(r["predicted"]) else "N/A"
+                                act  = f"{r['actual']:,.0f}" if pd.notna(r["actual"]) else "N/A"
+                                err  = f"{r['pct_error']:.1f}%" if pd.notna(r["pct_error"]) else "N/A"
+                                row += [pred, act, err]
+                        rows.append(row)
+                    cols = ["Company"]
+                    for year in fy:
+                        cols += [f"FY{year} Pred", f"FY{year} Act", f"FY{year} %Diff"]
+                    _df_to_table(doc, pd.DataFrame(rows, columns=cols))
 
     # Q1b — accuracy by cap size + horizon
     _add_heading(doc, "Q1b. Accuracy Analysis — Large vs Mid vs Small Cap", 2)
@@ -248,7 +276,33 @@ def generate_report() -> Path:
     _add_heading(doc, "Q2. Stock Price Prediction from 2024 Daily Data", 1)
     stock_path = EVALS_DIR / "stock_prediction.csv"
     if stock_path.exists():
-        _df_to_table(doc, pd.read_csv(stock_path))
+        sdf = pd.read_csv(stock_path)
+        # One row per company: Jan/Mar/Dec 2025 — predicted, actual, %diff, direction
+        rows = []
+        for ticker in sorted(sdf["ticker"].unique()):
+            row = [ticker]
+            tsub = sdf[sdf["ticker"] == ticker]
+            for target in ("Jan-2025", "Mar-2025", "Dec-2025"):
+                r = tsub[tsub["forecast_target"] == target]
+                if r.empty:
+                    row += ["N/A", "N/A", "N/A", "N/A"]
+                else:
+                    r = r.iloc[0]
+                    pred = f"{r['predicted_price']:,.0f}" if pd.notna(r["predicted_price"]) else "N/A"
+                    act  = f"{r['actual_price']:,.0f}" if pd.notna(r["actual_price"]) else "N/A"
+                    err  = f"{r['pct_error']:.1f}%" if pd.notna(r["pct_error"]) else "N/A"
+                    dirn = ("✓" if r["direction_correct"] is True or str(r["direction_correct"]) == "True"
+                            else "✗" if pd.notna(r["direction_correct"]) else "N/A")
+                    row += [pred, act, err, dirn]
+            rows.append(row)
+        cols = ["Company"]
+        for t in ("Jan'25", "Mar'25", "Dec'25"):
+            cols += [f"{t} Pred", f"{t} Act", f"{t} %Diff", f"{t} Dir"]
+        _df_to_table(doc, pd.DataFrame(rows, columns=cols))
+        # Direction accuracy summary
+        dir_acc = sdf.groupby("forecast_target")["direction_correct"].mean()
+        summary = " | ".join(f"{t}: {v*100:.0f}%" for t, v in dir_acc.items())
+        doc.add_paragraph(f"Direction accuracy across 20 companies — {summary}")
 
     doc.add_page_break()
 
@@ -258,7 +312,8 @@ def generate_report() -> Path:
         "One representative prompt+response per agent type, shown for the first available company. "
         "The same prompt template was used consistently across all 20 companies."
     )
-    sample_ticker = tickers[0]
+    company_urls = json.loads(Path("data/company_urls.json").read_text())
+    sample_ticker = next(iter(company_urls.keys()))
     for agent in ("extractor", "forecaster_baseline", "forecaster_alt_strategy",
                   "critique_baseline", "revise_baseline", "stock_predictor",
                   "analyst_commentary"):
