@@ -74,9 +74,21 @@ async def get_prompts(ticker: str):
 
 @app.post("/generate-report")
 async def generate_report_endpoint():
+    """Generate full 20-company report from all available eval data."""
     from app.orchestrator import generate_report_only
     asyncio.create_task(generate_report_only())
     return {"status": "generating"}
+
+
+@app.post("/generate-report/{ticker}")
+async def generate_company_report_endpoint(ticker: str):
+    """Generate a single-company report immediately (no background task needed)."""
+    from app.agents.report_writer import generate_company_report
+    try:
+        path = generate_company_report(ticker.upper())
+        return {"status": "done", "ticker": ticker.upper(), "file": path.name}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.get("/report/status")
@@ -85,6 +97,18 @@ async def report_status():
     if report_path.exists():
         return {"ready": True, "size_kb": report_path.stat().st_size // 1024}
     return {"ready": False}
+
+
+@app.get("/report/download/{ticker}")
+async def download_company_report(ticker: str):
+    from fastapi.responses import FileResponse
+    report_path = Path(f"output/report_{ticker.upper()}.docx")
+    if not report_path.exists():
+        raise HTTPException(status_code=404,
+            detail=f"No report for {ticker} yet. Run the pipeline first.")
+    return FileResponse(str(report_path),
+        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        filename=f"FinAgent_{ticker.upper()}_Report.docx")
 
 
 @app.get("/report/download")

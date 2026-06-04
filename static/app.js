@@ -94,6 +94,20 @@ function analyzeAll() {
     });
 }
 
+function generateCompanyReport(ticker) {
+  addBubble(`⟳ Generating report for ${ticker}…`, "bot");
+  fetch(`/generate-report/${ticker}`, {method:"POST"})
+    .then(r => r.json())
+    .then(d => {
+      if (d.status === "done") {
+        addBubble(`✅ ${ticker} report ready! <a href="/report/download/${ticker}" target="_blank">⬇ Download ${ticker}_Report.docx</a>`, "bot");
+      } else {
+        addBubble(`❌ Report failed: ${d.detail || "unknown error"}`, "bot");
+      }
+    })
+    .catch(e => addBubble(`❌ Could not generate report: ${e}`, "bot"));
+}
+
 function generateReport() {
   addBubble("⟳ Generating commentary and report — this may take a minute…", "bot");
   fetch("/generate-report", {method:"POST"})
@@ -215,8 +229,11 @@ function handleEvent(ticker, payload) {
     case "pipeline_complete":
       html = `<span class="agent-label al-rep">✅ Pipeline Complete</span><br>
         <strong>${ticker}</strong> analysis done.<br><br>
-        <button onclick="generateReport()" style="background:#1a5276;color:#fff;border:none;padding:7px 16px;border-radius:8px;cursor:pointer;font-size:13px;margin-right:8px">
-          📄 Generate report
+        <button onclick="generateCompanyReport('${ticker}')" style="background:#1a5276;color:#fff;border:none;padding:7px 16px;border-radius:8px;cursor:pointer;font-size:13px;margin-right:8px">
+          📄 Report for ${ticker}
+        </button>
+        <button onclick="generateReport()" style="background:#f0f2f5;color:#374151;border:1px solid #e9edef;padding:7px 16px;border-radius:8px;cursor:pointer;font-size:13px;margin-right:8px">
+          📄 Full 20-company report
         </button>
         <button onclick="showEvals()" style="background:#f0f2f5;color:#374151;border:1px solid #e9edef;padding:7px 16px;border-radius:8px;cursor:pointer;font-size:13px">
           📊 View evals
