@@ -1,0 +1,71 @@
+ticker,year,field,source,original,corrected,screener_ref,factor
+HDFCBANK,2025,revenue_cr,actual,34614.93,346149.3,336367.0,x10^1
+HDFCBANK,2025,net_income_cr,actual,6734.74,67347.4,73440.0,x10^1
+HDFCBANK,2024,revenue_cr,actual,30758.16,307581.6,283649.0,x10^1
+HDFCBANK,2024,net_income_cr,actual,6081.23,60812.299999999996,65446.0,x10^1
+ICICIBANK,2022,revenue_cr,actual,15823.07,158230.7,95407.0,x10^1
+ICICIBANK,2022,net_income_cr,actual,2511.01,25110.100000000002,26538.0,x10^1
+ICICIBANK,2021,revenue_cr,actual,16133.65,,89163.0,"EXCLUDED (off-basis, unfixable)"
+ICICIBANK,2021,net_income_cr,actual,1838.43,18384.3,20364.0,x10^1
+ICICIBANK,2023,revenue_cr,actual,18717.71,187177.09999999998,121067.0,x10^1
+ICICIBANK,2023,net_income_cr,actual,3403.66,34036.6,35461.0,x10^1
+ICICIBANK,2024,revenue_cr,actual,23711.15,237111.5,159516.0,x10^1
+ICICIBANK,2024,net_income_cr,actual,4425.64,44256.4,46081.0,x10^1
+ICICIBANK,2025,revenue_cr,actual,19177.05,191770.5,186331.0,x10^1
+ICICIBANK,2025,net_income_cr,actual,5102.92,51029.2,54569.0,x10^1
+NTPC,2023,revenue_cr,actual,17787.82,177878.2,176207.0,x10^1
+NTPC,2022,revenue_cr,actual,14867.56,148675.6,132669.0,x10^1
+ONGC,2022,revenue_cr,actual,53919.94,539199.4,491246.0,x10^1
+ONGC,2022,net_income_cr,actual,4552.21,45522.1,49294.0,x10^1
+ONGC,2021,revenue_cr,actual,36976.59,369765.89999999997,303849.0,x10^1
+ONGC,2021,net_income_cr,actual,1630.44,16304.400000000001,21360.0,x10^1
+ONGC,2023,revenue_cr,actual,15475.41,,632291.0,"EXCLUDED (off-basis, unfixable)"
+ONGC,2023,net_income_cr,actual,3544.05,35440.5,32778.0,x10^1
+ONGC,2024,revenue_cr,actual,65525.89,655258.9,601581.0,x10^1
+ONGC,2024,net_income_cr,actual,4922.14,49221.4,55273.0,x10^1
+ONGC,2025,revenue_cr,actual,148325.7,,612065.0,"EXCLUDED (off-basis, unfixable)"
+ONGC,2023,revenue_cr,forecast_baseline,104588.0,1045880.0,632291.0,x10^1
+ONGC,2022,revenue_cr,forecast_alt_strategy,70720.0,707200.0,491246.0,x10^1
+ONGC,2023,revenue_cr,forecast_alt_strategy,77350.0,773500.0,632291.0,x10^1
+ONGC,2024,revenue_cr,forecast_alt_strategy,80750.0,807500.0,601581.0,x10^1
+IREDA,2024,revenue_cr,actual,49663.58,4966.358,4965.0,x10^-1
+IREDA,2024,net_income_cr,actual,12522.29,1252.2290000000003,1252.0,x10^-1
+IFCI,2024,net_income_cr,actual,103.66,,241.0,"EXCLUDED (off-basis, unfixable)"
+IFCI,2024,eps,forecast_baseline,-61.6,-0.616,0.47,x10^-2
+IFCI,2023,net_income_cr,forecast_alt_strategy,-1092.0,-109.2,-120.0,x10^-1
+IFCI,2023,eps,forecast_alt_strategy,-5.76,-0.576,-0.95,x10^-1
+IFCI,2024,eps,forecast_alt_strategy,-3.84,-0.384,0.47,x10^-1
+IFCI,2023,net_income_cr,forecast_baseline,-1561.55,-156.155,-120.0,x10^-1
+IFCI,2023,eps,forecast_baseline,-7.43,-0.743,-0.95,x10^-1
+IFCI,2024,eps,forecast_baseline,-5.78,-0.5780000000000001,0.47,x10^-1
+IFCI,2025,eps,forecast_baseline,-4.5,-0.45,0.63,x10^-1
+IFCI,2023,net_income_cr,forecast_alt_strategy,-1610.0,-161.0,-120.0,x10^-1
+IFCI,2023,eps,forecast_alt_strategy,-7.66,-0.766,-0.95,x10^-1
+IFCI,2024,eps,forecast_alt_strategy,-5.49,-0.549,0.47,x10^-1
+KEC,2024,eps,actual,1.35,13.5,13.49,x10^1
+KEC,2023,eps,actual,0.68,6.800000000000001,6.85,x10^1
+KEC,2025,revenue_cr,actual,4646.79,,21847.0,"EXCLUDED (off-basis, unfixable)"
+TEXRAIL,2022,revenue_cr,actual,16217.36,1621.736,1814.0,x10^-1
+TEXRAIL,2022,net_income_cr,actual,205.28,20.528000000000002,21.0,x10^-1
+TEXRAIL,2021,revenue_cr,actual,16887.38,1688.7380000000003,1689.0,x10^-1
+TEXRAIL,2021,net_income_cr,actual,118.66,11.866,12.0,x10^-1
+TEXRAIL,2023,net_income_cr,actual,115.32,,26.0,"EXCLUDED (off-basis, unfixable)"
+TEXRAIL,2022,net_income_cr,forecast_baseline,-252.18,-25.218000000000004,21.0,x10^-1
+TEXRAIL,2023,net_income_cr,forecast_baseline,-230.94,-23.094,26.0,x10^-1
+TEXRAIL,2024,net_income_cr,forecast_baseline,14.06,140.6,113.0,x10^1
+TEXRAIL,2024,eps,forecast_baseline,0.43,4.3,2.83,x10^1
+TEXRAIL,2025,net_income_cr,forecast_baseline,13.84,138.4,249.0,x10^1
+TEXRAIL,2025,eps,forecast_baseline,0.42,4.2,6.24,x10^1
+TEXRAIL,2023,revenue_cr,forecast_alt_strategy,15990.0,1599.0,2243.0,x10^-1
+TEXRAIL,2023,net_income_cr,forecast_alt_strategy,194.0,19.400000000000002,26.0,x10^-1
+VINDHYATEL,2022,revenue_cr,forecast_baseline,9242.52,924.2520000000001,1324.0,x10^-1
+VINDHYATEL,2022,net_income_cr,forecast_baseline,1385.06,138.506,193.0,x10^-1
+VINDHYATEL,2023,net_income_cr,forecast_baseline,1064.44,106.44400000000002,185.0,x10^-1
+VINDHYATEL,2022,revenue_cr,forecast_alt_strategy,13841.0,1384.1000000000001,1324.0,x10^-1
+VINDHYATEL,2022,net_income_cr,forecast_alt_strategy,1802.0,180.20000000000002,193.0,x10^-1
+VINDHYATEL,2023,net_income_cr,forecast_alt_strategy,1982.0,198.20000000000002,185.0,x10^-1
+VINDHYATEL,2024,net_income_cr,forecast_alt_strategy,2158.0,215.8,283.0,x10^-1
+SKIPPER,2022,net_income_cr,actual,251.47,25.147000000000002,25.0,x10^-1
+SKIPPER,2021,net_income_cr,actual,214.34,21.434,21.0,x10^-1
+SKIPPER,2023,net_income_cr,actual,355.66,35.566,36.0,x10^-1
+SKIPPER,2023,revenue_cr,forecast_alt_strategy,192.0,1920.0,1980.0,x10^1

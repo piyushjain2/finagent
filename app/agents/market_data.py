@@ -32,8 +32,9 @@ def fetch_actuals(ticker: str) -> dict[int, dict]:
     cache = MARKET_DIR / f"{ticker}_actuals.json"
     if cache.exists():
         cached = {int(k): v for k, v in json.loads(cache.read_text()).items()}
-        # Invalidate caches written under the old multi-tier policy
-        if all(v.get("source") == "pdf_extraction" for v in cached.values()):
+        # Invalidate caches from older policies (multi-tier or pre-self_row)
+        if cached and all(v.get("source") == "pdf_extraction" and "self_row" in v
+                          for v in cached.values()):
             return cached
         cache.unlink()
 
@@ -48,13 +49,21 @@ def fetch_actuals(ticker: str) -> dict[int, dict]:
                 continue
             for row in data.get("years", []):
                 y = row.get("year")
-                if y and row.get("revenue_cr") is not None:
-                    actuals[y] = {
-                        "revenue_cr": row["revenue_cr"],
-                        "net_income_cr": row["net_income_cr"],
-                        "eps": row.get("eps"),
-                        "source": "pdf_extraction",
-                    }
+                if not (y and row.get("revenue_cr") is not None):
+                    continue
+                # SAME-YEAR PREFERENCE: a report's own audited year beats another
+                # report's comparative column. Never overwrite a self-row.
+                is_self_row = (y == year)
+                existing = actuals.get(y)
+                if existing and existing.get("self_row") and not is_self_row:
+                    continue
+                actuals[y] = {
+                    "revenue_cr": row["revenue_cr"],
+                    "net_income_cr": row["net_income_cr"],
+                    "eps": row.get("eps"),
+                    "source": "pdf_extraction",
+                    "self_row": is_self_row,
+                }
 
     cache.write_text(json.dumps(actuals))
     return actuals

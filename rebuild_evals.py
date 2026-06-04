@@ -26,6 +26,35 @@ from app.agents.metrics import (
     compute_trading_returns, compute_stock_prediction_accuracy,
     compute_cap_summary, EVALS_DIR,
 )
+from app.agents.scale_guard import (
+    fetch_screener_reference, snap_scale, flush_corrections_log,
+)
+
+
+def _snap_actuals(ticker: str, actuals: dict, ref: dict) -> dict:
+    """Power-of-10 unit-slip correction on PDF-extracted actuals.
+    Unfixable off-basis actuals are EXCLUDED (None) — a wrong ground truth
+    is worse than a missing one."""
+    for year, vals in actuals.items():
+        r = ref.get(year, {})
+        for field in ("revenue_cr", "net_income_cr", "eps"):
+            vals[field] = snap_scale(vals.get(field), r.get(field),
+                                     ticker, year, field, source="actual",
+                                     null_if_unfixable=True)
+    return actuals
+
+
+def _snap_forecasts(ticker: str, forecasts: dict, ref: dict) -> dict:
+    """Power-of-10 unit-slip correction on LLM forecasts (against same-year reference)."""
+    for strategy, fcast in forecasts.items():
+        rows = fcast.get("revised_forecast") or fcast.get("forecast", [])
+        for row in rows:
+            r = ref.get(row.get("year"), {})
+            for field in ("revenue_cr", "net_income_cr", "eps"):
+                row[field] = snap_scale(row.get(field), r.get(field),
+                                        ticker, row.get("year", 0), field,
+                                        source=f"forecast_{strategy}")
+    return forecasts
 
 RESPONSES_DIR = Path("data/responses")
 TICKERS = list(json.loads(Path("data/company_urls.json").read_text()).keys())
@@ -71,10 +100,19 @@ def main():
         cap = _get_cap_size(ticker)
         actuals = fetch_actuals(ticker)
 
+        # ── Scale guard: snap power-of-10 unit slips against Screener reference ──
+        ref = fetch_screener_reference(ticker)
+        if ref:
+            actuals = _snap_actuals(ticker, actuals, ref)
+        else:
+            print(f"  ⚠ no Screener reference — scale guard skipped")
+
         # ── Forecast accuracy (both base years) ───────────────────────────
         for base_year in FORECAST_BASE_YEARS:
             forecasts = _load_forecasts(ticker, base_year)
             if forecasts:
+                if ref:
+                    forecasts = _snap_forecasts(ticker, forecasts, ref)
                 rows = compute_forecast_accuracy(ticker, cap, base_year, forecasts, actuals)
                 print(f"  forecast_accuracy base {base_year}: {len(rows)} rows")
             else:
@@ -141,7 +179,9 @@ def main():
                 print(f"  Q2: {len(rows)} prediction rows")
 
     compute_cap_summary()
-    print("\n✅ Eval rebuild complete.")
+    n_corrections = flush_corrections_log()
+    print(f"\n✅ Eval rebuild complete. Scale corrections applied: {n_corrections} "
+          f"(audit: data/evals/scale_corrections.csv)")
 
     # Summary
     for csv in sorted(EVALS_DIR.glob("*.csv")):
