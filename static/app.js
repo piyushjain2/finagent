@@ -70,27 +70,21 @@ function selectCompany(ticker, cap) {
     return;
   }
 
-  // Otherwise ask the server what state this company is in and offer ONE clear action.
+  // FULLY AUTOMATIC: report ready → show download. Otherwise → start analysis immediately.
   fetch(`/status/${ticker}`).then(r => r.json()).then(s => {
     if (s.report_ready) {
       addBubble(
-        `<b>${ticker}</b> has been analyzed and its report is ready.<br><br>
+        `✅ <b>${ticker}</b> report is ready.<br><br>
          <button class="btn" onclick="window.location.href='/report/download/${ticker}'">⬇ Download report</button>
          <button class="btn secondary" onclick="rerunCompany('${ticker}')">🔁 Re-run analysis</button>`, "bot");
     } else if (s.analyzed) {
-      addBubble(
-        `<b>${ticker}</b> has analysis data but no report yet.<br><br>
-         <button class="btn" onclick="generateCompanyReport('${ticker}')">📄 Generate report</button>
-         <button class="btn secondary" onclick="rerunCompany('${ticker}')">🔁 Re-run analysis</button>`, "bot");
+      // Data exists, just package the report — automatic
+      generateCompanyReport(ticker);
     } else {
-      addBubble(
-        `Ready to analyze <b>${ticker}</b> — downloads annual reports, runs the 9-agent pipeline,
-         and produces a forecast report automatically.<br><br>
-         <button class="btn" onclick="analyzeTicker('${ticker}')">▶ Analyze ${ticker}</button>`, "bot");
+      // Never analyzed — start the pipeline automatically
+      analyzeTicker(ticker);
     }
-  }).catch(() => {
-    addBubble(`<button class="btn" onclick="analyzeTicker('${ticker}')">▶ Analyze ${ticker}</button>`, "bot");
-  });
+  }).catch(() => analyzeTicker(ticker));
 }
 
 function resetPipeline() {
