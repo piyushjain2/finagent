@@ -136,3 +136,50 @@ def render_prompt_panel(ticker: str, agent: str, title: str,
                 facecolor=fig.get_facecolor())
     plt.close(fig)
     return out
+
+
+def chart_pipeline_architecture() -> Path:
+    """Nine-agent pipeline flow diagram."""
+    from matplotlib.patches import FancyBboxPatch, FancyArrowPatch
+    FIG_DIR.mkdir(parents=True, exist_ok=True)
+
+    stages = [
+        ("PDF\nFetcher", "BSE / company\nIR sites\n(100 PDFs)", "#1a5276"),
+        ("RAG\nIndexer", "chunk + embed\nChromaDB\n(local, free)", "#6c3483"),
+        ("Extractor", "Haiku 4.5\nP&L → JSON\n(unit-checked)", "#1e8449"),
+        ("Forecasters\n×3", "Sonnet 4.6\nbaseline / v1 / v2\n(firewalled)", "#b9770e"),
+        ("Critique +\nRevise", "adversarial\nreview, conf.\nranges", "#884ea0"),
+        ("Market\nData", "yfinance\nprices, announce\ndates", "#2874a6"),
+        ("Metrics", "% diff, surprise\nsignal, returns\nvs NIFTY", "#a93226"),
+        ("Scale\nGuard", "Screener tripwire\npower-of-10 snap\n124 audited", "#117864"),
+        ("Report", "LaTeX +\ncommentary\n(this document)", "#283747"),
+    ]
+    fig, ax = plt.subplots(figsize=(10.5, 2.9))
+    ax.set_xlim(0, len(stages) * 1.18)
+    ax.set_ylim(0, 1)
+    ax.axis("off")
+    for i, (title, sub, color) in enumerate(stages):
+        x = i * 1.18 + 0.05
+        box = FancyBboxPatch((x, 0.30), 1.02, 0.52,
+                             boxstyle="round,pad=0.02",
+                             facecolor=color, edgecolor="none", alpha=0.92)
+        ax.add_patch(box)
+        ax.text(x + 0.51, 0.70, title, ha="center", va="center",
+                fontsize=8.3, fontweight="bold", color="white")
+        ax.text(x + 0.51, 0.44, sub, ha="center", va="center",
+                fontsize=5.9, color="white", alpha=0.95)
+        ax.text(x + 0.51, 0.88, f"{i+1}", ha="center", va="center", fontsize=7,
+                fontweight="bold", color=color,
+                bbox=dict(boxstyle="circle,pad=0.25", fc="white", ec=color, lw=1.2))
+        if i < len(stages) - 1:
+            ax.annotate("", xy=(x + 1.18, 0.56), xytext=(x + 1.06, 0.56),
+                        arrowprops=dict(arrowstyle="-|>", color="#5d6d7e", lw=1.4))
+    ax.text(len(stages) * 1.18 / 2, 0.10,
+            "Every stage checkpointed to disk — a failed run resumes free; "
+            "every LLM call logged verbatim to the Prompt Vault",
+            ha="center", fontsize=7.4, style="italic", color="#5d6d7e")
+    fig.tight_layout()
+    out = FIG_DIR / "pipeline_architecture.png"
+    fig.savefig(out, dpi=220, bbox_inches="tight")
+    plt.close(fig)
+    return out

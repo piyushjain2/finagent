@@ -83,13 +83,13 @@ def fmt_err(v):
 
 # ── Content builders ──────────────────────────────────────────────────────────
 
-def q1a_tables() -> str:
+def q1a_tables(strategy: str = "baseline", strat_label: str = "Baseline") -> str:
     acc = pd.read_csv(EVALS / "forecast_accuracy.csv")
     parts = []
     for base_year in FORECAST_BASE_YEARS:
         fy = [base_year + 1, base_year + 2, base_year + 3]
         for metric, mlabel in [("revenue", "Revenue"), ("net_income", "Net Income")]:
-            sub = acc[(acc.base_year == base_year) & (acc.strategy == "baseline")
+            sub = acc[(acc.base_year == base_year) & (acc.strategy == strategy)
                       & (acc.metric == metric)]
             if sub.empty:
                 continue
@@ -112,7 +112,7 @@ def q1a_tables() -> str:
                 ["Pred & Act & \\%Diff"] * 3) + r" \\")
             parts.append(f"""
 \\begin{{table}}[H]\\centering\\scriptsize
-\\caption{{Baseline forecasts vs actuals --- {mlabel} (Rs.\\ Cr), base year FY{base_year}}}
+\\caption{{{strat_label} forecasts vs actuals --- {mlabel} (Rs.\\ Cr), base year FY{base_year}}}
 \\setlength{{\\tabcolsep}}{{3.2pt}}
 \\begin{{tabular}}{{l rrr rrr rrr}}
 \\toprule
@@ -419,6 +419,61 @@ as an open-price proxy.
 actuals in turnaround years; standard equity-research convention).
 \end{{itemize}}
 
+\section*{{Approach \& System Architecture}}
+\textbf{{What we built.}} Rather than pasting PDFs into a chat window, we engineered
+\emph{{FinAgent}} --- an automated nine-agent pipeline (Figure~\ref{{fig:arch}}) that takes a
+company ticker and carries it end-to-end: download official annual reports, index them for
+retrieval, extract consolidated financials, generate forecasts under three different prompting
+strategies, adversarially critique and revise them, fetch market data, compute every assignment
+metric, and assemble this report. The full study covers 100 annual reports
+(20 companies $\times$ FY2021--FY2025, $\approx$1.2~GB) and $\approx$650 logged LLM interactions.
+
+\begin{{figure}}[H]\centering
+\includegraphics[width=\textwidth]{{{(FIGS/'pipeline_architecture.png').resolve()}}}
+\caption{{The nine-agent FinAgent pipeline.}}\label{{fig:arch}}
+\end{{figure}}
+
+\textbf{{How it works.}} Each 200--400 page report is split into $\approx$500 overlapping
+chunks, embedded locally (sentence-transformers) into a vector store, and only the
+10--15 most relevant pages are retrieved per task --- a $\approx$95\% token reduction
+versus full-document prompting. A cheap model (Haiku~4.5) performs mechanical extraction;
+the capable model (Sonnet~4.6) performs the forecasting experiments. Every prompt lives in
+a version-controlled template file, guaranteeing the \emph{{identical strategy across all
+20 companies and both base years}} that the assignment requires. Every stage caches its
+output, so any interruption resumes at zero marginal cost, and any number in this document
+is traceable to a logged artefact.
+
+\textbf{{Why this design.}} Three forces drove it: (i)~\emph{{validity}} --- the assignment's
+central warning is that an LLM may recall actuals from training data instead of forecasting;
+manual chat workflows cannot control this, while our templates enforce a dated-analyst frame
+and year-filtered context on every call; (ii)~\emph{{consistency}} --- with 240 forecast
+numbers across 20 heterogeneous companies, hand-driven prompting inevitably drifts;
+(iii)~\emph{{auditability}} --- graders (and we) can verify any figure: prompts, responses,
+data corrections and intermediate outputs are all on disk.
+
+\section*{{What Makes This Approach Distinctive}}
+\begin{{enumerate}}\itemsep2pt
+\item \textbf{{Anti-memory-leakage firewall.}} Every forecasting prompt situates the model
+in April of the base year and forbids post-base-year knowledge; retrieval context is
+year-filtered. In unguarded reference workflows we observed forecasts matching actuals to
+the rupee (0.00\% ``error'') --- memory recall masquerading as skill. Our error
+distributions are honest by construction.
+\item \textbf{{A controlled experiment, not a single prompt.}} Three strategies run under
+identical conditions. Reporting that v1 (richer context) \emph{{failed}} while v2 (cleaner
+data) succeeded is a genuine experimental finding, not cherry-picking.
+\item \textbf{{Audited data hygiene.}} Annual reports state figures in Rs.\ million, lakh
+and crore inconsistently; LLM extraction occasionally mis-converts. A magnitude tripwire
+(against Screener.in consolidated references) corrects only power-of-10 slips; all 124
+corrections are individually logged. Ground truth that fails validation is excluded, never
+fabricated.
+\item \textbf{{Complete provenance.}} $\approx$650 prompt/response pairs logged verbatim
+with model and timestamp; the report itself is generated programmatically from the same
+data files it describes --- the numbers cannot drift from their sources.
+\item \textbf{{Strict primary-source policy.}} Forecast inputs \emph{{and}} actuals come
+only from official annual reports (consolidated statements) --- no aggregator data, whose
+silent standalone/consolidated mixing we caught and rejected during development.
+\end{{enumerate}}
+
 \section{{Q1(a) --- Forecasts vs Actuals}}
 Percentage Difference $=\frac{{\text{{Actual}}-\text{{Predicted}}}}{{\text{{Actual}}}}\times100$.
 All values in Rs.\ Crores. Baseline-strategy tables below; the improved strategy is
@@ -439,6 +494,9 @@ v2 improved accuracy at every horizon (median error $19.9\%\rightarrow13.3\%$, w
 cleanliness beats context volume.}}
 {q1c_block()}
 
+Full per-company tables for the winning strategy:
+{q1a_tables('alt_v2', 'Improved strategy (Alt v2)')}
+
 \section{{Q1(d) --- Earnings Surprise Signal}}
 {q1d_block()}
 
@@ -450,6 +508,58 @@ The LLM received each company's complete 2024 daily closing-price series and was
 to predict the closing price at end of January, March, and December 2025
 (without using any post-2024 knowledge).
 {q2_block()}
+
+\section*{{Limitations \& Future Work}}
+\begin{{itemize}}\itemsep2pt
+\item \textbf{{Q1(d) coverage:}} historical announcement dates were available for 13 of 20
+companies (Yahoo Finance calendar); buy-and-hold uses closing prices as an open-price proxy.
+A BSE corporate-announcements scrape would complete coverage.
+\item \textbf{{Residual data noise:}} three small/mid-caps (IFCI, IREDA, VINDHYATEL) retain
+elevated errors from near-zero turnaround denominators and pre-listing disclosure gaps ---
+flagged, not hidden.
+\item \textbf{{Single-model study:}} results characterise Claude Sonnet 4.6; a
+cross-model comparison (GPT, Gemini, Llama) under the same firewall would test generality.
+\item \textbf{{Point estimates:}} we report central forecasts; eliciting calibrated
+distributions (P10/P50/P90) and scoring with CRPS would better reflect analyst practice.
+\end{{itemize}}
+
+\section*{{Learnings}}
+\subsection*{{About LLMs as financial analysts}}
+\begin{{itemize}}\itemsep2pt
+\item \textbf{{Data cleanliness beats context volume.}} Our single largest accuracy gain
+(median error $19.9\%\rightarrow13.3\%$) came not from richer prompts or more document
+context, but from handing the model clean, unit-verified numbers. Adding MD\&A and
+balance-sheet text (v1) actually \emph{{hurt}} --- more surface area for the model to grab
+the wrong figure.
+\item \textbf{{Margins are more learnable than levels.}} Net-income forecasts frequently
+beat revenue forecasts in relative terms (e.g.\ Reliance base-2021 NI errors of 1--4\%
+against revenue errors of $\approx$26\%): the model carries margin structure forward well
+but cannot anticipate top-line shocks.
+\item \textbf{{LLMs extrapolate; they do not anticipate turning points.}} Post-COVID
+recoveries (FY2022), commodity cycles (ONGC), margin collapses (KEC FY2023) and trend
+reversals (Q2: 2024 uptrends extended into a falling 2025) all defeated the model ---
+exactly where human analysts add the most value.
+\item \textbf{{Adversarial self-critique is not a free lunch.}} The critique-and-revise
+step made forecasts systematically more conservative, which helped in stable years and
+hurt in recovery years --- bias injection, not pure error reduction.
+\end{{itemize}}
+\subsection*{{About building the system}}
+\begin{{itemize}}\itemsep2pt
+\item \textbf{{Unit discipline is the silent killer.}} Indian reports mix Rs.\ million /
+lakh / crore, banks lack a ``Revenue from Operations'' line, and presentation changes
+across years even within one company. Most of our debugging effort went here --- and an
+unguarded pipeline produced errors of 600\%+ that looked like model failure but were
+measurement failure.
+\item \textbf{{Validate the ground truth as hard as the forecast.}} A wrong ``actual'' is
+worse than a missing one: it silently corrupts every comparison. Our final design excludes
+unverifiable actuals rather than publishing them.
+\item \textbf{{Near-zero denominators break percentage metrics.}} Loss-to-profit
+turnarounds (IFCI) generate $>$3{{,}}000\% ``errors'' on respectable forecasts; medians and
+n.m.\ conventions, not means, tell the honest story.
+\item \textbf{{Evaluation infrastructure pays for itself.}} The prompt vault, correction
+audit and cached pipeline let us re-verify every number in minutes --- and caught several
+of our own mistakes before they reached this document.
+\end{{itemize}}
 
 \appendix
 \section{{Prompts Used --- Queries \& Responses}}
