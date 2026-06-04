@@ -50,11 +50,12 @@ def _forecast_one(ticker: str, year: int, strategy: str) -> dict:
         cache.unlink()
 
     if strategy == "baseline":
-        query = "revenue net income profit P&L growth rate"
+        query = "revenues net profit consolidated statement of profit and loss"
         skill = load_skill(BASELINE_SKILL)
         forecast_years = f"{year+1}, {year+2}, {year+3}"
     else:
-        query = "revenue net income balance sheet MD&A segment performance capex RoE"
+        query = ("revenues net profit financial highlights ten year five year "
+                 "summary CAGR balance sheet MD&A segment performance capex RoE outlook")
         skill = load_skill(ALT_SKILL)
         forecast_years = f"{year+1}, {year+2}, {year+3}"
 

@@ -16,7 +16,8 @@ def extract_financials(ticker: str, year: int) -> dict:
         return json.loads(cache.read_text())
 
     chunks = query_chunks(ticker, year,
-        "revenue net income profit after tax earnings per share consolidated P&L", n=10)
+        "revenues net profit attributable to owners earnings per share "
+        "consolidated statement of profit and loss", n=10)
     context = "\n\n---\n\n".join(chunks)
 
     skill = load_skill(SKILL_PATH)

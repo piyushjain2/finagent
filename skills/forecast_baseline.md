@@ -6,7 +6,9 @@ CRITICAL RULES:
 2. Treat FY{BASE_YEAR} as the MOST RECENT year you know about. Any data in the text for years after {BASE_YEAR} must be IGNORED.
 3. Your forecast must be derived solely from data up to and including FY{BASE_YEAR}.
 
-Step 1: From the P&L statement, find Revenue and Net Income for the years shown up to FY{BASE_YEAR}.
+Step 1: From the consolidated P&L statement, find Revenues (the reported top-line revenue figure —
+        use the SAME line item consistently across all years) and Net Income (PAT) for the years
+        shown up to FY{BASE_YEAR}.
 Step 2: Calculate the year-on-year growth rates using only data up to FY{BASE_YEAR}.
 Step 3: Use the FY{BASE_YEAR} growth rate as your primary projection assumption.
 Step 4: Project Revenue and Net Income forward for FY{FORECAST_YEARS} only.
