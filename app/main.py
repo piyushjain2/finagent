@@ -84,15 +84,56 @@ async def get_evals():
     return result
 
 
+_CONTEXT_MARKERS = (
+    "=== ANNUAL REPORT TEXT",
+    "=== STRUCTURED FINANCIALS",
+    "=== MD&A / OUTLOOK EXCERPTS",
+    "=== 2024 DAILY CLOSING PRICES",
+    "=== EVALUATION DATA",
+)
+
+
+def _condense_prompt(prompt: str) -> str:
+    """Keep the full prompt TEMPLATE; summarize the injected data context.
+    The template is the experimental design; the context is reproducible data."""
+    for marker in _CONTEXT_MARKERS:
+        idx = prompt.find(marker)
+        if idx != -1:
+            head = prompt[:idx].rstrip()
+            tail = prompt[idx:]
+            label_end = tail.find("===", 3)
+            label = tail[:label_end + 3] if label_end != -1 else marker + " ==="
+            omitted = len(tail)
+            return (f"{head}\n\n{label}\n"
+                    f"[… {omitted:,} characters of injected data context omitted for brevity — "
+                    f"full text logged in data/prompts/ …]")
+    return prompt
+
+
 @app.get("/prompts/{ticker}/print")
-async def print_prompts(ticker: str):
-    """Print-friendly page with COMPLETE prompts & responses — use the browser's
-    Print → Save as PDF for a complete, paginated record (or full-page screenshot)."""
+async def print_prompts(ticker: str, full: int = 0):
+    """Print-friendly record of prompts & responses.
+    Default (condensed): full prompt templates + full responses, data context summarized
+    — one entry per agent type (~6-8 pages). Pass ?full=1 for the unabridged version."""
     t = ticker.upper()
     logs = []
     for f in sorted(Path("data/prompts").glob(f"{t}_*.jsonl")):
         logs.extend(json.loads(l) for l in f.read_text().splitlines() if l.strip())
     logs.sort(key=lambda e: e.get("timestamp", ""))
+
+    if not full:
+        # One representative entry per agent type, template-complete
+        seen = set()
+        deduped = []
+        for e in logs:
+            agent = e.get("agent", "")
+            if agent in seen:
+                continue
+            seen.add(agent)
+            e = dict(e)
+            e["prompt"] = _condense_prompt(e.get("prompt", ""))
+            deduped.append(e)
+        logs = deduped
 
     import html as html_mod
     cards = []
@@ -104,7 +145,7 @@ async def print_prompts(ticker: str):
             <span class="meta">{html_mod.escape(e.get('model',''))} · FY{e.get('year')} ·
               {html_mod.escape((e.get('timestamp') or '')[:19].replace('T',' '))}</span>
           </div>
-          <div class="label">QUERY (complete)</div>
+          <div class="label">QUERY (full template; injected data context summarized unless ?full=1)</div>
           <pre class="q">{html_mod.escape(e.get('prompt',''))}</pre>
           <div class="label">RESPONSE (complete)</div>
           <pre class="r">{html_mod.escape(e.get('response',''))}</pre>
@@ -131,7 +172,7 @@ async def print_prompts(ticker: str):
     <h1>📝 {t} — Complete LLM Queries &amp; Responses</h1>
     <p class="sub">{len(logs)} interactions, logged verbatim by FinAgent's Prompt Vault.
     Identical prompt templates were used across all 20 companies.
-    Print this page (Cmd+P → Save as PDF) for a complete record.</p>
+    Condensed view: one entry per agent type, complete prompt templates, complete responses; bulk data context summarized. Append <b>?full=1</b> to the URL for the unabridged version. Print this page (Cmd+P → Save as PDF).</p>
     {''.join(cards)}
     </body></html>"""
     return HTMLResponse(page)
