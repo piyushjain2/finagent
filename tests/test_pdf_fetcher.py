@@ -7,7 +7,8 @@ from app.agents.pdf_fetcher import fetch_pdf, PDF_DIR
 def test_fetch_pdf_skips_if_exists(tmp_path, monkeypatch):
     monkeypatch.setattr("app.agents.pdf_fetcher.PDF_DIR", tmp_path)
     pdf = tmp_path / "RELIANCE_2021.pdf"
-    pdf.write_bytes(b"%PDF-1.4 fake")
+    # Write a file large enough to pass the size check (> 10_000 bytes)
+    pdf.write_bytes(b"%PDF-1.4 " + b"x" * 15_000)
     result = fetch_pdf("RELIANCE", 2021)
     assert result == pdf
 
@@ -16,9 +17,12 @@ def test_fetch_pdf_returns_path_on_download(tmp_path, monkeypatch):
     monkeypatch.setattr("app.agents.pdf_fetcher.PDF_DIR", tmp_path)
     mock_resp = MagicMock()
     mock_resp.status_code = 200
-    mock_resp.content = b"%PDF-1.4 test content"
-    mock_resp.headers = {"content-type": "application/pdf"}
-    with patch("app.agents.pdf_fetcher._find_pdf_url", return_value="http://example.com/ar.pdf"), \
+    mock_resp.content = b"%PDF-1.4 " + b"x" * 15_000   # valid PDF marker + size > 10KB
+    mock_resp.raise_for_status = MagicMock()
+    # Patch both discovery functions to return a URL, and requests.get for the download
+    with patch("app.agents.pdf_fetcher._screener_annual_report_url",
+               return_value="http://example.com/ar.pdf"), \
+         patch("app.agents.pdf_fetcher._company_ir_url", return_value=None), \
          patch("requests.get", return_value=mock_resp):
         result = fetch_pdf("RELIANCE", 2021)
     assert result == tmp_path / "RELIANCE_2021.pdf"
