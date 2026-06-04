@@ -5,15 +5,24 @@ import pandas as pd
 
 EVALS_DIR = Path("data/evals")
 
-def _append_csv(filename: str, rows: list[dict]):
+def _append_csv(filename: str, rows: list[dict], dedup_cols: list[str] | None = None):
+    """
+    Append rows, replacing existing rows that match on dedup_cols.
+    dedup_cols defaults to ["ticker"] — pass finer keys (e.g. ["ticker","base_year"])
+    when one ticker legitimately has multiple row groups.
+    """
+    if not rows:
+        return
     EVALS_DIR.mkdir(parents=True, exist_ok=True)
     path = EVALS_DIR / filename
     df_new = pd.DataFrame(rows)
+    keys = dedup_cols or ["ticker"]
     if path.exists():
         df_existing = pd.read_csv(path)
-        ticker = rows[0].get("ticker") if rows else None
-        if ticker:
-            df_existing = df_existing[df_existing["ticker"] != ticker]
+        # Drop existing rows whose key-tuple appears in the new batch
+        new_keys = set(map(tuple, df_new[keys].astype(str).values))
+        mask = df_existing[keys].astype(str).apply(tuple, axis=1).isin(new_keys)
+        df_existing = df_existing[~mask]
         pd.concat([df_existing, df_new], ignore_index=True).to_csv(path, index=False)
     else:
         df_new.to_csv(path, index=False)
@@ -44,7 +53,7 @@ def compute_forecast_accuracy(ticker: str, cap_size: str, base_year: int,
                     "pct_error": pct_err, "confidence_range_pct": conf_range,
                     "within_confidence_range": within,
                 })
-    _append_csv("forecast_accuracy.csv", rows)
+    _append_csv("forecast_accuracy.csv", rows, dedup_cols=["ticker", "base_year", "strategy"])
     return rows
 
 def compute_earnings_surprise(ticker: str, year: int, forecast_eps: float,
@@ -53,7 +62,7 @@ def compute_earnings_surprise(ticker: str, year: int, forecast_eps: float,
     row = {"ticker": ticker, "year": year,
            "forecast_eps": forecast_eps, "actual_eps": actual_eps,
            "price_minus5": price_minus5, "signal": signal}
-    _append_csv("earnings_surprise.csv", [row])
+    _append_csv("earnings_surprise.csv", [row], dedup_cols=["ticker", "year"])
     return row
 
 def compute_trading_returns(ticker: str, announcement_date: str, signal_direction: int,
@@ -80,7 +89,7 @@ def compute_trading_returns(ticker: str, announcement_date: str, signal_directio
            "signal_direction": signal_direction,
            "return_pct_5d": ret, "nifty_return_pct_5d": nifty_ret,
            "excess_return": excess, "outperformed": outperformed}
-    _append_csv("trading_returns.csv", [row])
+    _append_csv("trading_returns.csv", [row], dedup_cols=["ticker", "announcement_date"])
     return row
 
 def compute_stock_prediction_accuracy(ticker: str, predictions: list[dict],
@@ -105,7 +114,7 @@ def compute_stock_prediction_accuracy(ticker: str, predictions: list[dict],
             "pct_error": pct_err, "direction_correct": direction_correct,
             "confidence": pred.get("confidence"),
         })
-    _append_csv("stock_prediction.csv", rows)
+    _append_csv("stock_prediction.csv", rows, dedup_cols=["ticker", "forecast_target"])
     return rows
 
 def compute_cap_summary():

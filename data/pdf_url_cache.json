@@ -27,28 +27,110 @@
     "2024": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/2160dea5-d49e-4409-83a4-c2b111a3bd12.pdf",
     "2025": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/411e22d2-0720-4cec-b659-9ccd639f0f1a.pdf"
   },
-  "ICICIBANK": {},
-  "SBIN": {},
-  "ITC": {},
-  "LT": {},
-  "NTPC": {},
-  "ONGC": {},
-  "REC": {
-    "2021": "https://www.bseindia.com/bseplus/AnnualReport/532955/70155532955.pdf"
+  "ICICIBANK": {
+    "2021": "https://www.bseindia.com/bseplus/AnnualReport/532174/69104532174_31_07_21.pdf",
+    "2022": "https://www.bseindia.com/bseplus/AnnualReport/532174/73975532174.pdf",
+    "2023": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/f68c72c9-9c03-42e9-a5e6-413cb88728a4.pdf",
+    "2024": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/9d5f21fd-9b1e-42e5-a48b-84d2623f293c.pdf",
+    "2025": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/d80c4401-bed9-4aa4-b532-00255b963376.pdf"
   },
-  "PFC": {},
-  "HUDCO": {},
+  "SBIN": {
+    "2021": "https://www.bseindia.com/bseplus/AnnualReport/500112/68518500112.pdf",
+    "2022": "https://www.bseindia.com/bseplus/AnnualReport/500112/73059500112.pdf",
+    "2023": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/22d33d1d-af2a-4d2d-98c0-eff16cd73cb5.pdf",
+    "2024": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/0e236470-9427-43c7-93e9-c8eb61bb1f72.pdf",
+    "2025": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/9c6a98f8-f882-4c06-9cb1-7f3b6ae1159f.pdf"
+  },
+  "ITC": {
+    "2021": "https://www.bseindia.com/bseplus/AnnualReport/500875/68921500875.pdf",
+    "2022": "https://www.bseindia.com/bseplus/AnnualReport/500875/73265500875.pdf",
+    "2023": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/139aec7a-7a7c-458f-ac5a-29f6dbe67c93.pdf",
+    "2024": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/f0d1e906-3c13-4993-ad06-e04ad1d3edf9.pdf",
+    "2025": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/8ba4a189-5fd2-4851-af6f-ec365f7edea2.pdf"
+  },
+  "LT": {
+    "2021": "https://www.bseindia.com/bseplus/AnnualReport/500510/68863500510.pdf",
+    "2022": "https://www.bseindia.com/bseplus/AnnualReport/500510/73655500510.pdf",
+    "2023": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/cb93406e-57ff-4d53-b6cc-41a58cb89fd1.pdf",
+    "2024": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/b59765b4-ed42-48bd-afad-7caa4417d85d.pdf",
+    "2025": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/63959ce8-b641-4bd4-9a62-43ab52301856.pdf"
+  },
+  "NTPC": {
+    "2021": "https://www.bseindia.com/bseplus/AnnualReport/532555/70823532555.pdf",
+    "2022": "https://www.bseindia.com/bseplus/AnnualReport/532555/74152532555.pdf",
+    "2023": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/da3b3d90-81a9-4839-9a4c-3caedb6497f4.pdf",
+    "2024": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/39e0cfa7-a5b9-4ef4-9802-ba4248ad306d.pdf",
+    "2025": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/ba273826-d8ae-4bf6-b346-31875690c34b.pdf"
+  },
+  "ONGC": {
+    "2021": "https://www.bseindia.com/bseplus/AnnualReport/500312/70239500312_15_09_21.pdf",
+    "2022": "https://www.bseindia.com/bseplus/AnnualReport/500312/74181500312.pdf",
+    "2023": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/f63f8358-7dfe-45ad-828c-d77e3641bdd1.pdf",
+    "2024": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/50731a2f-416a-4c07-ab51-3359757f7d22.pdf",
+    "2025": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/3a55fee2-d523-4c27-ba3a-eba8b2bdf8b8.pdf"
+  },
+  "REC": {
+    "2021": "https://www.bseindia.com/bseplus/AnnualReport/532955/70155532955.pdf",
+    "2022": "https://www.bseindia.com/bseplus/AnnualReport/532955/74629532955.pdf",
+    "2023": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/9d8fe82c-4bd6-48f8-84bf-3ab0e729f8dd.pdf",
+    "2024": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/51bee597-6e2e-4cb6-a2a8-903c17af92bc.pdf",
+    "2025": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/c246bfd8-d1bc-41d3-8fcd-ec75d8a15ec1.pdf"
+  },
+  "PFC": {
+    "2021": "https://www.bseindia.com/bseplus/AnnualReport/532810/70213532810.pdf",
+    "2022": "https://www.bseindia.com/bseplus/AnnualReport/532810/75217532810.pdf",
+    "2023": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/3b7e1f2b-f007-47b7-85a1-78e41d838b3b.pdf",
+    "2024": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/ac474ed8-999c-4995-bde5-9bcd94056c1f.pdf",
+    "2025": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/924feae3-36d4-4a0a-9b52-d07e5e89ff93.pdf"
+  },
+  "HUDCO": {
+    "2021": "https://www.bseindia.com/bseplus/AnnualReport/540530/72125540530.pdf",
+    "2022": "https://www.bseindia.com/bseplus/AnnualReport/540530/75000540530.pdf",
+    "2023": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/3d554063-d931-496a-ac18-c852a82ff8d9.pdf",
+    "2024": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/0cef08ae-31ff-4334-800a-69fe5dc851f7.pdf",
+    "2025": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/cbe38028-6592-4e6a-aae7-3c50d6812c99.pdf"
+  },
   "IREDA": {},
-  "IFCI": {},
+  "IFCI": {
+    "2021": "https://www.bseindia.com/bseplus/AnnualReport/500106/72758500106_20_12_21.pdf",
+    "2022": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/81b966fc-9fe3-42ca-9aa4-0f2de2b35ff7.pdf",
+    "2023": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/c8c8f065-a522-458c-9a82-8702da56e189.pdf",
+    "2024": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/b0a6fdf3-6a60-4315-9eab-43562a16f384.pdf",
+    "2025": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/5013366a-24f3-48c6-9fb1-ba99e3650a3a.pdf"
+  },
   "KEC": {
     "2021": "https://www.bseindia.com/bseplus/AnnualReport/532714/68876532714.pdf",
-    "2022": "https://www.bseindia.com/bseplus/AnnualReport/532714/73134532714.pdf"
+    "2022": "https://www.bseindia.com/bseplus/AnnualReport/532714/73134532714.pdf",
+    "2023": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/8bd6b568-d6fe-49a4-88d0-4772905ccb35.pdf",
+    "2024": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/9a1302d8-9fa0-435c-ace4-013c283515fa.pdf",
+    "2025": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/bbad8592-d586-49bd-bc55-f65b64e3f1a6.pdf"
   },
-  "TEXRAIL": {},
-  "POWERMECH": {},
-  "VINDHYATEL": {},
+  "TEXRAIL": {
+    "2021": "https://www.bseindia.com/bseplus/AnnualReport/533326/70305533326.pdf",
+    "2022": "https://www.bseindia.com/bseplus/AnnualReport/533326/76904533326.pdf",
+    "2023": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/bcaea31f-0aff-48ac-a3d9-7b5983687f55.pdf",
+    "2024": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/1a4e3af8-2129-462f-8ec0-28b90227441a.pdf",
+    "2025": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/d28ef7d6-5338-41f7-a99e-ca1d94d05c35.pdf"
+  },
+  "POWERMECH": {
+    "2021": "https://www.bseindia.com/bseplus/AnnualReport/539302/72253539302.pdf",
+    "2022": "https://www.bseindia.com/bseplus/AnnualReport/539302/77127539302.pdf",
+    "2023": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/d8a6fe6c-f51e-4bb5-95b0-7a210d512ca6.pdf",
+    "2024": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/8b573220-db8a-4a6b-9c9a-6319b5128b15.pdf",
+    "2025": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/1ea07bb3-e15e-468e-9572-406138ee19f9.pdf"
+  },
+  "VINDHYATEL": {
+    "2021": "https://www.bseindia.com/bseplus/AnnualReport/517015/70055517015.pdf",
+    "2022": "https://www.bseindia.com/bseplus/AnnualReport/517015/74862517015_20_09_22.pdf",
+    "2023": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/cad59202-8f02-4e2c-9d67-71357cf05dd6.pdf",
+    "2024": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/7591284c-670f-43ae-9628-97dc6d74ae84.pdf",
+    "2025": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/0b3463bf-53d0-4502-bd5c-771a7c7c1fe3.pdf"
+  },
   "SKIPPER": {
     "2021": "https://www.bseindia.com/bseplus/AnnualReport/538562/71207538562.pdf",
-    "2022": "https://www.bseindia.com/bseplus/AnnualReport/538562/74098538562.pdf"
+    "2022": "https://www.bseindia.com/bseplus/AnnualReport/538562/74098538562.pdf",
+    "2023": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/12053a54-8e53-425e-9130-b45a8a619831.pdf",
+    "2024": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/6ede6357-2a0c-4bc1-9efc-3f469678d594.pdf",
+    "2025": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/c8818d6e-fda0-4fca-9ac9-84c566299240.pdf"
   }
 }

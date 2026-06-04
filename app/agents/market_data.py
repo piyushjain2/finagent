@@ -109,3 +109,56 @@ def fetch_earnings_dates(ticker: str) -> list[str]:
         pass
     cache.write_text(json.dumps(dates))
     return dates
+
+# ── Q1d: earnings announcements + multi-year prices ───────────────────────────
+
+def fetch_annual_announcement_dates(ticker: str) -> dict[int, str]:
+    """
+    FY → annual results announcement date (Indian FY ends March; results
+    announced April–June). Sourced from yfinance historical earnings dates.
+    """
+    cache = MARKET_DIR / f"{ticker}_announcements.json"
+    if cache.exists():
+        return {int(k): v for k, v in json.loads(cache.read_text()).items()}
+
+    out: dict[int, str] = {}
+    try:
+        t = yf.Ticker(_yf_symbol(ticker))
+        ed = t.get_earnings_dates(limit=60)
+        if ed is not None and not ed.empty:
+            for ts in sorted(ed.index):
+                if ts.month in (4, 5, 6) and ts.year in (2022, 2023, 2024, 2025):
+                    out.setdefault(ts.year, str(ts.date()))   # earliest in window = Q4/annual
+    except Exception:
+        pass
+    MARKET_DIR.mkdir(parents=True, exist_ok=True)
+    cache.write_text(json.dumps(out))
+    return out
+
+
+def fetch_prices_range(ticker: str, start: str = "2022-01-01", end: str = "2025-12-31") -> pd.DataFrame:
+    """Daily closes across the full analysis window (announcement-window returns)."""
+    MARKET_DIR.mkdir(parents=True, exist_ok=True)
+    cache = MARKET_DIR / f"{ticker}_full_prices.csv"
+    if cache.exists():
+        df = pd.read_csv(cache, index_col=0, parse_dates=True)
+        df.columns = [c.lower() for c in df.columns]
+        return df
+    t = yf.Ticker(_yf_symbol(ticker))
+    df = t.history(start=start, end=end)
+    df = df[["Close"]].rename(columns={"Close": "close"})
+    df.index.name = "date"
+    df.to_csv(cache)
+    return df
+
+
+def fetch_nifty_range(start: str = "2022-01-01", end: str = "2025-12-31") -> pd.DataFrame:
+    MARKET_DIR.mkdir(parents=True, exist_ok=True)
+    cache = MARKET_DIR / "NIFTY50_full_prices.csv"
+    if cache.exists():
+        return pd.read_csv(cache, index_col=0, parse_dates=True)
+    df = yf.Ticker("^NSEI").history(start=start, end=end)[["Close"]]
+    df.columns = ["close"]
+    df.index.name = "date"
+    df.to_csv(cache)
+    return df
