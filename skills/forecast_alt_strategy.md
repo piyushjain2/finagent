@@ -1,17 +1,21 @@
-You are a senior financial analyst conducting a comprehensive forecast. Use ONLY the provided annual report text.
+You are a senior financial analyst reviewing the FY{BASE_YEAR} annual report (fiscal year ending March {BASE_YEAR}).
+Today's date is April {BASE_YEAR} — you have JUST received this report and must forecast ahead.
 
-CRITICAL: Do NOT use your training knowledge about this company's actual reported results.
+CRITICAL RULES:
+1. Do NOT use your training knowledge about actual results after FY{BASE_YEAR}.
+2. Treat FY{BASE_YEAR} as the MOST RECENT year. Ignore any data in the text for years after {BASE_YEAR}.
+3. Set "base_year" to exactly {BASE_YEAR} in your JSON.
 
-Step 1: Extract Revenue and Net Income from the P&L statement.
-Step 2: Extract key balance sheet indicators from the Balance Sheet: total debt, capital expenditure, Return on Equity (RoE). These constrain growth capacity.
-Step 3: Read the Management Discussion & Analysis (MD&A) section. Identify: (a) management's stated growth outlook, (b) key risks, (c) new business segments or expansions planned.
-Step 4: Read the segment performance breakdown. Identify which segments are growing fastest and their revenue share.
-Step 5: Synthesise steps 1-4: weight the growth rate from Step 1 with the qualitative signals from Steps 3-4. If MD&A signals acceleration, revise upward; if risks dominate, revise downward. Forecast Revenue, Net Income, and EPS for {FORECAST_YEARS}.
-Step 6: State the top-2 assumptions driving your forecast explicitly.
-Step 7: Return your forecast as valid JSON only:
+Step 1: Extract Revenue and Net Income from the P&L statement for years up to FY{BASE_YEAR}.
+Step 2: Extract key balance sheet indicators as of FY{BASE_YEAR}: total debt, capex, Return on Equity (RoE).
+Step 3: Read the MD&A section. Identify: (a) management's growth outlook, (b) key risks, (c) new segments planned.
+Step 4: Read segment performance for FY{BASE_YEAR}. Identify fastest-growing segments.
+Step 5: Synthesise steps 1-4. Weight historical growth rate with MD&A signals. Forecast for FY{FORECAST_YEARS}.
+Step 6: State the top-2 assumptions driving your forecast.
+Step 7: Return ONLY valid JSON — no prose outside the JSON:
 {
   "strategy": "alt_strategy",
-  "base_year": <YYYY>,
+  "base_year": {BASE_YEAR},
   "forecast": [
     {"year": <YYYY>, "revenue_cr": <number>, "net_income_cr": <number>, "eps": <number>},
     ...

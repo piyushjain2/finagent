@@ -56,8 +56,10 @@ def _forecast_one(ticker: str, year: int, strategy: str) -> dict:
 
     chunks = query_chunks(ticker, year, query, n=12)
     context = "\n\n---\n\n".join(chunks)
-    prompt = skill.replace("{FORECAST_YEARS}", forecast_years)
-    prompt += f"\n\n=== ANNUAL REPORT TEXT ===\n{context}"
+    prompt = (skill
+              .replace("{FORECAST_YEARS}", forecast_years)
+              .replace("{BASE_YEAR}", str(year)))
+    prompt += f"\n\n=== ANNUAL REPORT TEXT (FY{year} data only) ===\n{context}"
 
     raw = call_claude(prompt, ticker=ticker, year=year,
                       agent=f"forecaster_{strategy}", max_tokens=2048)
