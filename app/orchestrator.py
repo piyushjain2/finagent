@@ -56,9 +56,10 @@ async def run_pipeline(ticker: str) -> None:
                     await bus.emit(ticker, "warning",
                                    {"year": year, "msg": f"PDF + Screener fallback failed: {pdf_err}"})
 
-        # ── Stage 3: Extract financials from forecasting-input years (2021+2022) ──
+        # ── Stage 3: Extract financials from ALL years ─────────────────────────
+        # 2021+2022 feed the forecasts; 2022-2025 provide actuals (Tier 1 source)
         extracts: dict[int, dict] = {}
-        for year in FORECAST_BASE_YEARS:
+        for year in ALL_YEARS:
             try:
                 extracts[year] = extract_financials(ticker, year)
                 await bus.emit(ticker, "on_extract_complete",

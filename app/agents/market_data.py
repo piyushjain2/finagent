@@ -44,14 +44,16 @@ def fetch_actuals(ticker: str) -> dict[int, dict]:
             t = yf.Ticker(f"{ticker}.NS")
             fin = t.financials
             if fin is not None and not fin.empty:
+                import math
                 for col in fin.columns:
                     yr = col.year
                     if yr in missing:
                         rev = fin.loc["Total Revenue", col] / 1e7 if "Total Revenue" in fin.index else None
                         ni = fin.loc["Net Income", col] / 1e7 if "Net Income" in fin.index else None
-                        if rev:
+                        # NaN is truthy — explicitly reject it
+                        if rev is not None and not math.isnan(rev):
                             actuals[yr] = {"revenue_cr": round(rev, 2),
-                                           "net_income_cr": round(ni, 2) if ni else None,
+                                           "net_income_cr": round(ni, 2) if ni is not None and not math.isnan(ni) else None,
                                            "eps": None, "source": "yfinance"}
         except Exception:
             pass

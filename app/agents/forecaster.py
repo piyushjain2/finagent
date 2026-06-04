@@ -43,7 +43,11 @@ STOCK_SKILL = Path("skills/stock_prediction_prompt.md")
 def _forecast_one(ticker: str, year: int, strategy: str) -> dict:
     cache = RESPONSES_DIR / f"{ticker}_{year}_{strategy}_forecast.json"
     if cache.exists():
-        return json.loads(cache.read_text())
+        cached = json.loads(cache.read_text())
+        # Reject null/empty/invalid cache — re-run instead of returning garbage
+        if isinstance(cached, dict) and cached.get("forecast"):
+            return cached
+        cache.unlink()
 
     if strategy == "baseline":
         query = "revenue net income profit P&L growth rate"
