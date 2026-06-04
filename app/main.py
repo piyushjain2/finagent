@@ -67,14 +67,20 @@ async def stream(ticker: str):
 
 @app.get("/evals")
 async def get_evals():
+    import math
     result = {}
     evals_dir = Path("data/evals")
     if evals_dir.exists():
         for csv in evals_dir.glob("*.csv"):
             df = pd.read_csv(csv)
-            # NaN is not JSON-serializable — convert to None
-            df = df.where(pd.notna(df), None)
-            result[csv.stem] = df.to_dict(orient="records")
+            # pandas coerces None back to NaN in float columns — sanitize at the
+            # record level instead (Starlette serializes with allow_nan=False)
+            records = df.to_dict(orient="records")
+            result[csv.stem] = [
+                {k: (None if isinstance(v, float) and math.isnan(v) else v)
+                 for k, v in row.items()}
+                for row in records
+            ]
     return result
 
 
