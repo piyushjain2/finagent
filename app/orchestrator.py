@@ -149,12 +149,16 @@ async def run_pipeline(ticker: str) -> None:
 
     except Exception as e:
         await bus.emit(ticker, "pipeline_error", {"ticker": ticker, "error": str(e)})
-        raise
+        # Don't re-raise — let run_all_and_report continue with remaining tickers
 
 
 async def run_all_and_report(tickers: list[str]) -> Path:
     """Run pipeline for every ticker, then generate commentary + report."""
     for ticker in tickers:
-        await run_pipeline(ticker)
+        try:
+            await run_pipeline(ticker)
+        except Exception as e:
+            # Already emitted pipeline_error inside run_pipeline; keep going
+            print(f"[run_all_and_report] {ticker} failed: {e}")
     generate_commentary()
     return generate_report()

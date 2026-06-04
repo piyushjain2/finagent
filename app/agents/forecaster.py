@@ -48,6 +48,9 @@ def run_stock_prediction(ticker: str, price_data: list[dict]) -> dict:
     if cache.exists():
         return json.loads(cache.read_text())
 
+    if not price_data:
+        return {"ticker": ticker, "predictions": [], "reasoning": "No 2024 price data available."}
+
     rows = "\n".join(f"{r['date']}: {r['close']:.2f}" for r in price_data)
     skill = load_skill(STOCK_SKILL)
     prompt = f"{skill}\n\n=== 2024 DAILY CLOSING PRICES FOR {ticker} ===\n{rows}"
@@ -55,6 +58,8 @@ def run_stock_prediction(ticker: str, price_data: list[dict]) -> dict:
     raw = call_claude(prompt, ticker=ticker, year=2024,
                       agent="stock_predictor", max_tokens=1024)
     clean = raw.strip().removeprefix("```json").removeprefix("```").removesuffix("```").strip()
+    if not clean:
+        return {"ticker": ticker, "predictions": [], "reasoning": "LLM returned empty response."}
     result = json.loads(clean)
     RESPONSES_DIR.mkdir(parents=True, exist_ok=True)
     cache.write_text(json.dumps(result, indent=2))
