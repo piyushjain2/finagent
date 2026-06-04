@@ -63,10 +63,12 @@ function selectCompany(ticker, cap) {
   resetPipeline();
   renderList(COMPANIES);
 
-  // If the pipeline is mid-run for this ticker, just show progress.
+  // If the pipeline is mid-run for this ticker, re-attach the stream —
+  // the server replays all events so far, so progress reappears.
   const st = companyStatus[ticker];
   if (st && st.dot === "running") {
-    addBubble(`⟳ ${ticker} pipeline is running — progress will stream here.`, "bot");
+    addBubble(`⟳ ${ticker} pipeline is running — replaying progress…`, "bot");
+    startStream(ticker);
     return;
   }
 
@@ -98,16 +100,16 @@ function resetPipeline() {
 function analyzeTicker(ticker) {
   setCompanyStatus(ticker, "running", "Starting pipeline…");
   addBubble(`▶ Starting full analysis for <b>${ticker}</b>…`, "bot");
+  startStream(ticker);   // connect the event stream BEFORE the pipeline starts
   fetch(`/analyze/${ticker}`, {method:"POST"})
-    .then(() => startStream(ticker))
     .catch(e => addBubble(`Error starting: ${e}`, "bot"));
 }
 
 function rerunCompany(ticker) {
   addBubble(`🔁 Re-running analysis for <b>${ticker}</b> (cached stages are reused)…`, "bot");
   setCompanyStatus(ticker, "running", "Re-running…");
+  startStream(ticker);   // connect first — server replays any missed events
   fetch(`/analyze/${ticker}`, {method:"POST"})
-    .then(() => startStream(ticker))
     .catch(e => addBubble(`Error: ${e}`, "bot"));
 }
 

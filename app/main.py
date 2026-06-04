@@ -36,15 +36,26 @@ async def analyze_all():
 
 @app.get("/stream/{ticker}")
 async def stream(ticker: str):
+    # Subscribe BEFORE snapshotting history — single event loop guarantees no gap
     q = bus.subscribe(ticker)
+    history = bus.history(ticker)
 
     async def generator():
         try:
+            # Replay everything that already happened (fixes late-connection race)
+            finished = False
+            for event in history:
+                yield {"data": json.dumps(event)}
+                if event["event"] in ("pipeline_complete", "pipeline_error"):
+                    finished = True
+            if finished:
+                return
+            # Then stream live events
             while True:
                 try:
                     event = await asyncio.wait_for(q.get(), timeout=600)
                     yield {"data": json.dumps(event)}
-                    if event["event"] == "pipeline_complete":
+                    if event["event"] in ("pipeline_complete", "pipeline_error"):
                         break
                 except asyncio.TimeoutError:
                     yield {"data": json.dumps({"event": "ping", "data": {}})}

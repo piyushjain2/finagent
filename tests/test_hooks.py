@@ -20,3 +20,26 @@ async def test_unsubscribe_stops_delivery():
     bus.unsubscribe("TCS", q)
     await bus.emit("TCS", "test", {})
     assert q.empty()
+
+
+@pytest.mark.asyncio
+async def test_history_replays_for_late_subscriber():
+    """Events emitted before a client connects are available via history()."""
+    bus = HookEventBus()
+    await bus.emit("INFY", "agent_start", {})
+    await bus.emit("INFY", "on_pdf_fetched", {"year": 2021})
+    await bus.emit("INFY", "pipeline_complete", {})
+    # Late subscriber sees the full run via history
+    history = bus.history("INFY")
+    assert [e["event"] for e in history] == ["agent_start", "on_pdf_fetched", "pipeline_complete"]
+
+
+@pytest.mark.asyncio
+async def test_new_run_resets_history():
+    """agent_start begins a fresh history (old run's events dropped)."""
+    bus = HookEventBus()
+    await bus.emit("TCS", "agent_start", {})
+    await bus.emit("TCS", "pipeline_complete", {})
+    await bus.emit("TCS", "agent_start", {})  # new run
+    history = bus.history("TCS")
+    assert [e["event"] for e in history] == ["agent_start"]
