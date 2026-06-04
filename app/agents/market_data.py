@@ -8,9 +8,11 @@ from bs4 import BeautifulSoup
 RESPONSES_DIR = Path("data/responses")
 MARKET_DIR = Path("data/market")
 
+ACTUAL_YEARS = (2022, 2023, 2024, 2025)   # 2025 available as of 2026
+
 def fetch_actuals(ticker: str) -> dict[int, dict]:
     """
-    Return {year: {revenue_cr, net_income_cr, eps}} for FY2022-2024.
+    Return {year: {revenue_cr, net_income_cr, eps}} for FY2022-2025.
     Tier 1: extracted PDF data. Tier 2: yfinance. Tier 3: Screener.in scrape.
     """
     MARKET_DIR.mkdir(parents=True, exist_ok=True)
@@ -20,8 +22,8 @@ def fetch_actuals(ticker: str) -> dict[int, dict]:
 
     actuals: dict[int, dict] = {}
 
-    # Tier 1: PDF extraction results
-    for year in (2022, 2023, 2024):
+    # Tier 1: PDF extraction results (2022–2025 reports)
+    for year in ACTUAL_YEARS:
         extract_file = RESPONSES_DIR / f"{ticker}_{year}_extract.json"
         if extract_file.exists():
             data = json.loads(extract_file.read_text())
@@ -36,7 +38,7 @@ def fetch_actuals(ticker: str) -> dict[int, dict]:
                     }
 
     # Tier 2: yfinance for any missing years
-    missing = [y for y in (2022, 2023, 2024) if y not in actuals]
+    missing = [y for y in ACTUAL_YEARS if y not in actuals]
     if missing:
         try:
             t = yf.Ticker(f"{ticker}.NS")
@@ -55,7 +57,7 @@ def fetch_actuals(ticker: str) -> dict[int, dict]:
             pass
 
     # Tier 3: Screener.in public page
-    missing = [y for y in (2022, 2023, 2024) if y not in actuals]
+    missing = [y for y in ACTUAL_YEARS if y not in actuals]
     if missing:
         try:
             url = f"https://www.screener.in/company/{ticker}/"

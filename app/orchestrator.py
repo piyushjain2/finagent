@@ -21,7 +21,7 @@ from app.agents.screener_fallback import populate_chromadb_from_screener
 
 COMPANY_URLS = Path("data/company_urls.json")
 FORECAST_BASE_YEARS = [2021, 2022]
-ALL_YEARS = [2021, 2022, 2023, 2024]
+ALL_YEARS = [2021, 2022, 2023, 2024, 2025]   # 2025 = FY2024-25, available as of 2026
 
 _LARGE = {"RELIANCE", "INFY", "TCS", "HDFCBANK", "ICICIBANK", "SBIN", "ITC", "LT", "NTPC", "ONGC"}
 _MID   = {"REC", "PFC", "HUDCO", "IREDA", "IFCI"}
