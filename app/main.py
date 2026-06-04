@@ -122,18 +122,21 @@ async def print_prompts(ticker: str, full: int = 0):
     logs.sort(key=lambda e: e.get("timestamp", ""))
 
     if not full:
-        # One representative entry per agent type, template-complete
+        # Only the 7 DISTINCT prompt templates (alt-strategy critique/revise use
+        # templates identical to baseline; retries repeat the original prompt)
+        core_agents = ["extractor", "forecaster_baseline", "forecaster_alt_strategy",
+                       "forecaster_alt_v2", "critique_baseline", "revise_baseline",
+                       "stock_predictor"]
         seen = set()
-        deduped = []
+        by_agent = {}
         for e in logs:
             agent = e.get("agent", "")
-            if agent in seen:
-                continue
-            seen.add(agent)
-            e = dict(e)
-            e["prompt"] = _condense_prompt(e.get("prompt", ""))
-            deduped.append(e)
-        logs = deduped
+            if agent in core_agents and agent not in seen:
+                seen.add(agent)
+                e = dict(e)
+                e["prompt"] = _condense_prompt(e.get("prompt", ""))
+                by_agent[agent] = e
+        logs = [by_agent[a] for a in core_agents if a in by_agent]
 
     import html as html_mod
     cards = []
@@ -167,11 +170,11 @@ async def print_prompts(ticker: str, full: int = 0):
           white-space:pre-wrap;word-break:break-word;border-radius:6px;padding:10px;margin:0}}
       .q{{background:#f8fafc;border:1px solid #e2e8f0}}
       .r{{background:#f0fdf4;border:1px solid #bbf7d0}}
-      @media print{{ .card{{page-break-inside:auto}} pre{{font-size:8.5px}} }}
+      @media print{{ .card{{page-break-inside:auto;padding:8px 10px;margin-bottom:10px}} pre{{font-size:7.5px;line-height:1.35;padding:6px}} .sub{{font-size:10px}} h1{{font-size:15px}} body{{margin:8px auto}} }}
     </style></head><body>
     <h1>📝 {t} — Complete LLM Queries &amp; Responses</h1>
     <p class="sub">{len(logs)} interactions, logged verbatim by FinAgent's Prompt Vault.
-    Identical prompt templates were used across all 20 companies.
+    Identical prompt templates were used across all 20 companies and both base years. Shown: the 7 distinct templates (critique/revise for alternate strategies reuse the baseline templates; unit-correction retries repeat the original prompt with a correction suffix).
     Condensed view: one entry per agent type, complete prompt templates, complete responses; bulk data context summarized. Append <b>?full=1</b> to the URL for the unabridged version. Print this page (Cmd+P → Save as PDF).</p>
     {''.join(cards)}
     </body></html>"""
