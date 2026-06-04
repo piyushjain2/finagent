@@ -70,6 +70,15 @@ async def get_prompts(ticker: str):
     return logs
 
 
+@app.post("/generate-report")
+async def generate_report_endpoint():
+    from app.orchestrator import run_all_and_report
+    import json as j
+    tickers = list(j.loads(Path("data/company_urls.json").read_text()).keys())
+    asyncio.create_task(run_all_and_report(tickers))
+    return {"status": "generating"}
+
+
 @app.get("/report/download")
 async def download_report():
     from fastapi.responses import FileResponse

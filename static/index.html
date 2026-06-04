@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FinAgent</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<div class="app">
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <div class="logo">FA</div>
+      <span class="app-title">FinAgent</span>
+      <button class="icon-btn" onclick="showAllCompanies()" title="Show all">+</button>
+    </div>
+    <div class="search-wrap">
+      <input type="text" id="search" placeholder="Search companies…" oninput="filterList()">
+    </div>
+    <div class="company-list" id="companyList"></div>
+  </div>
+
+  <div class="main">
+    <div class="chat-header">
+      <div class="chat-header-avatar" id="headerAvatar">FA</div>
+      <div class="chat-header-info">
+        <div class="name" id="headerName">FinAgent</div>
+        <div class="status" id="headerStatus">Select a company to begin</div>
+      </div>
+      <div class="chat-header-actions">
+        <button class="icon-btn" onclick="showPrompts()" title="Prompts">📝</button>
+        <button class="icon-btn" onclick="showEvals()" title="Evals">📊</button>
+        <button class="icon-btn" onclick="downloadReport()" title="Download report">⬇</button>
+      </div>
+    </div>
+
+    <div class="pipeline-bar" id="pipelineBar" style="display:none">
+      <div class="pipe-step" id="ps1">① PDF</div>
+      <div class="pipe-step" id="ps2">② RAG</div>
+      <div class="pipe-step" id="ps3">③ Extract</div>
+      <div class="pipe-step" id="ps4">④ Forecast</div>
+      <div class="pipe-step" id="ps5">⑤ Critique</div>
+      <div class="pipe-step" id="ps6">⑥ Market</div>
+      <div class="pipe-step" id="ps7">⑦ Metrics</div>
+      <div class="pipe-step" id="ps8">⑧ Commentary</div>
+      <div class="pipe-step" id="ps9">⑨ Report</div>
+    </div>
+
+    <div class="messages" id="messages"></div>
+
+    <div class="quick-chips">
+      <span class="chip" onclick="analyzeAll()">▶ Analyze all 20</span>
+      <span class="chip" onclick="generateReport()">📄 Generate report</span>
+      <span class="chip" onclick="showEvals()">📊 Evals</span>
+      <span class="chip" onclick="downloadReport()">⬇ Download</span>
+    </div>
+
+    <div class="input-area">
+      <div class="input-box" id="inputBox" contenteditable="true"
+           onkeydown="handleKey(event)" placeholder="Type a company name or command…"></div>
+      <button class="send-btn" onclick="sendCommand()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="white">
+          <path d="M2 21l21-9L2 3v7l15 2-15 2v7z"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Evals panel (slide-in) -->
+<div class="evals-panel" id="evalsPanel">
+  <div class="evals-header">
+    <span>Eval Results</span>
+    <button class="icon-btn" onclick="closeEvals()">✕</button>
+  </div>
+  <div class="evals-body" id="evalsBody"></div>
+</div>
+
+<script src="/static/app.js"></script>
+</body>
+</html>
