@@ -2,9 +2,11 @@ import json
 from pathlib import Path
 from app.claude_client import call_claude, load_skill
 from app.agents.rag_processor import query_chunks
+from app.agents.forecaster import _extract_json
 
 RESPONSES_DIR = Path("data/responses")
 SKILL_PATH = Path("skills/extraction_prompt.md")
+
 
 def extract_financials(ticker: str, year: int) -> dict:
     """Extract Revenue, NI, EPS from annual report via RAG + Claude. Cached."""
@@ -13,7 +15,6 @@ def extract_financials(ticker: str, year: int) -> dict:
     if cache.exists():
         return json.loads(cache.read_text())
 
-    # Retrieve P&L relevant chunks
     chunks = query_chunks(ticker, year,
         "revenue net income profit after tax earnings per share consolidated P&L", n=10)
     context = "\n\n---\n\n".join(chunks)
@@ -22,9 +23,6 @@ def extract_financials(ticker: str, year: int) -> dict:
     prompt = f"{skill}\n\n=== ANNUAL REPORT TEXT ===\n{context}"
 
     raw = call_claude(prompt, ticker=ticker, year=year, agent="extractor", max_tokens=2048)
-
-    # Parse JSON from response (strip markdown fences if present)
-    clean = raw.strip().removeprefix("```json").removeprefix("```").removesuffix("```").strip()
-    result = json.loads(clean)
+    result = _extract_json(raw)
     cache.write_text(json.dumps(result, indent=2))
     return result

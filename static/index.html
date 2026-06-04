@@ -50,7 +50,8 @@
 
     <div class="quick-chips">
       <span class="chip" onclick="analyzeAll()">▶ Analyze all 20</span>
-      <span class="chip" onclick="generateReport()">📄 Generate report</span>
+      <span class="chip" onclick="activeTicker ? generateCompanyReport(activeTicker) : addBubble('Select a company first, then click this to generate its report.','bot')">📄 Report (this company)</span>
+      <span class="chip" onclick="generateReport()">📄 Full 20-company report</span>
       <span class="chip" onclick="showEvals()">📊 Evals</span>
       <span class="chip" onclick="downloadReport()">⬇ Download</span>
     </div>

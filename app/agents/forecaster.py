@@ -1,8 +1,39 @@
 # app/agents/forecaster.py
-import json, asyncio
+import json, asyncio, re
 from pathlib import Path
 from app.claude_client import call_claude, load_skill
 from app.agents.rag_processor import query_chunks
+
+
+def _extract_json(raw: str) -> dict:
+    """
+    Robustly extract a JSON object from a Claude response.
+    Handles: pure JSON, ```json fenced, prose-then-JSON, JSON-in-prose.
+    """
+    text = raw.strip()
+
+    # 1. Strip markdown fences and try direct parse
+    clean = text.removeprefix("```json").removeprefix("```").removesuffix("```").strip()
+    try:
+        return json.loads(clean)
+    except json.JSONDecodeError:
+        pass
+
+    # 2. Find ```json ... ``` or ``` ... ``` blocks
+    for m in re.finditer(r"```(?:json)?\s*([\s\S]*?)```", text):
+        try:
+            return json.loads(m.group(1).strip())
+        except json.JSONDecodeError:
+            continue
+
+    # 3. Find the last {...} block in the text (handles "Here is my answer: {...}")
+    for m in reversed(list(re.finditer(r"\{[\s\S]*\}", text))):
+        try:
+            return json.loads(m.group(0))
+        except json.JSONDecodeError:
+            continue
+
+    raise ValueError(f"No valid JSON found in response (first 200 chars): {text[:200]}")
 
 RESPONSES_DIR = Path("data/responses")
 BASELINE_SKILL = Path("skills/forecast_baseline.md")
@@ -30,8 +61,7 @@ def _forecast_one(ticker: str, year: int, strategy: str) -> dict:
 
     raw = call_claude(prompt, ticker=ticker, year=year,
                       agent=f"forecaster_{strategy}", max_tokens=2048)
-    clean = raw.strip().removeprefix("```json").removeprefix("```").removesuffix("```").strip()
-    result = json.loads(clean)
+    result = _extract_json(raw)
     RESPONSES_DIR.mkdir(parents=True, exist_ok=True)
     cache.write_text(json.dumps(result, indent=2))
     return result
@@ -57,10 +87,9 @@ def run_stock_prediction(ticker: str, price_data: list[dict]) -> dict:
 
     raw = call_claude(prompt, ticker=ticker, year=2024,
                       agent="stock_predictor", max_tokens=1024)
-    clean = raw.strip().removeprefix("```json").removeprefix("```").removesuffix("```").strip()
-    if not clean:
+    if not raw.strip():
         return {"ticker": ticker, "predictions": [], "reasoning": "LLM returned empty response."}
-    result = json.loads(clean)
+    result = _extract_json(raw)
     RESPONSES_DIR.mkdir(parents=True, exist_ok=True)
     cache.write_text(json.dumps(result, indent=2))
     return result
