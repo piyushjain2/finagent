@@ -225,8 +225,7 @@ def generate_report() -> Path:
             fy = [base_year + 1, base_year + 2, base_year + 3]
             _add_heading(doc,
                 f"Using FY{base_year} Annual Report → Predict FY{fy[0]}, FY{fy[1]}, FY{fy[2]}", 3)
-            for strategy, slabel in [("baseline", "Baseline (P&L-only CoT)"),
-                                      ("alt_v2", "Improved Strategy (Structured-Data CoT)")]:
+            for strategy, slabel in [("baseline", "Baseline (P&L-only CoT)")]:
                 for metric, mlabel in [("revenue", "Revenue"), ("net_income", "Net Income")]:
                     sub = acc[(acc["base_year"] == base_year) &
                               (acc["strategy"] == strategy) &

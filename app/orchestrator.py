@@ -42,9 +42,9 @@ async def run_pipeline(ticker: str) -> None:
         years_with_data: list[int] = []
         for year in ALL_YEARS:
             try:
-                pdf_path = fetch_pdf(ticker, year)
+                pdf_path = await asyncio.to_thread(fetch_pdf, ticker, year)
                 await bus.emit(ticker, "on_pdf_fetched", {"year": year, "path": str(pdf_path)})
-                info = process_pdf(ticker, year, pdf_path)
+                info = await asyncio.to_thread(process_pdf, ticker, year, pdf_path)
                 await bus.emit(ticker, "on_rag_indexed", info)
                 years_with_data.append(year)
             except Exception as pdf_err:
@@ -66,7 +66,7 @@ async def run_pipeline(ticker: str) -> None:
         extracts: dict[int, dict] = {}
         for year in years_with_data:
             try:
-                extracts[year] = extract_financials(ticker, year)
+                extracts[year] = await asyncio.to_thread(extract_financials, ticker, year)
                 await bus.emit(ticker, "on_extract_complete",
                                {"year": year, "data": extracts[year]})
             except Exception as e:
@@ -76,14 +76,14 @@ async def run_pipeline(ticker: str) -> None:
         all_revised: dict[int, dict] = {}
         for base_year in FORECAST_BASE_YEARS:
             try:
-                forecasts = run_forecast(ticker, base_year)
+                forecasts = await asyncio.to_thread(run_forecast, ticker, base_year)
                 await bus.emit(ticker, "on_forecast_ready",
                                {"base_year": base_year, "strategies": list(forecasts.keys())})
 
                 revised: dict[str, dict] = {}
                 for strategy, fcast in forecasts.items():
-                    critique = critique_forecast(ticker, base_year, strategy, fcast)
-                    rev = revise_forecast(ticker, base_year, strategy, fcast, critique)
+                    critique = await asyncio.to_thread(critique_forecast, ticker, base_year, strategy, fcast)
+                    rev = await asyncio.to_thread(revise_forecast, ticker, base_year, strategy, fcast, critique)
                     revised[strategy] = rev
                 all_revised[base_year] = revised
                 await bus.emit(ticker, "on_forecast_revised", {"base_year": base_year})
@@ -91,11 +91,11 @@ async def run_pipeline(ticker: str) -> None:
                 await bus.emit(ticker, "warning", {"base_year": base_year, "msg": f"forecast: {e}"})
 
         # ── Stage 6: Market data ──────────────────────────────────────────────
-        actuals = fetch_actuals(ticker)
+        actuals = await asyncio.to_thread(fetch_actuals, ticker)
         await bus.emit(ticker, "on_actuals_fetched", {"n_years": len(actuals)})
-        prices = fetch_prices(ticker)
-        nifty  = fetch_nifty50()
-        earnings_dates = fetch_earnings_dates(ticker)
+        prices = await asyncio.to_thread(fetch_prices, ticker)
+        nifty  = await asyncio.to_thread(fetch_nifty50)
+        earnings_dates = await asyncio.to_thread(fetch_earnings_dates, ticker)
         await bus.emit(ticker, "on_prices_ready", {"n_rows": len(prices)})
 
         # ── Stage 7: Metrics ──────────────────────────────────────────────────
@@ -133,7 +133,7 @@ async def run_pipeline(ticker: str) -> None:
             {"date": str(d.date()), "close": float(c)}
             for d, c in zip(prices.index, prices.iloc[:, 0])
         ]
-        stock_pred = run_stock_prediction(ticker, price_rows)
+        stock_pred = await asyncio.to_thread(run_stock_prediction, ticker, price_rows)
         await bus.emit(ticker, "on_stock_prediction_ready", {"ticker": ticker})
 
         # Approximate 2025 actuals for accuracy check
