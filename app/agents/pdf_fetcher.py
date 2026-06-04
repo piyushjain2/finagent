@@ -4,6 +4,7 @@ Downloads annual report PDFs via Screener.in Documents section → BSE direct li
 Works for all NSE-listed companies without needing company-specific IR URLs.
 """
 import json
+import time
 import requests
 from bs4 import BeautifulSoup
 from pathlib import Path
@@ -12,6 +13,24 @@ PDF_DIR = Path("data/pdfs")
 URLS_FILE = Path("data/company_urls.json")
 URL_CACHE = Path("data/pdf_url_cache.json")
 HEADERS = {"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"}
+
+
+def _get_with_retry(url: str, timeout: int = 60, retries: int = 3) -> requests.Response:
+    """
+    GET with exponential backoff. Survives transient DNS failures / network blips
+    (e.g. 'Failed to resolve www.bseindia.com') that would otherwise kill a batch run.
+    """
+    last_err: Exception | None = None
+    for attempt in range(retries):
+        try:
+            resp = requests.get(url, timeout=timeout, headers=HEADERS, allow_redirects=True)
+            resp.raise_for_status()
+            return resp
+        except (requests.ConnectionError, requests.Timeout) as e:
+            last_err = e
+            if attempt < retries - 1:
+                time.sleep(2 ** attempt * 2)   # 2s, 4s
+    raise last_err  # type: ignore[misc]
 
 
 def _cached_url(ticker: str, year: int) -> str | None:
@@ -50,8 +69,7 @@ def _screener_annual_report_url(ticker: str, year: int) -> str | None:
     for candidate in candidates:
         url = f"https://www.screener.in/company/{candidate}/"
         try:
-            resp = requests.get(url, timeout=20, headers=HEADERS)
-            resp.raise_for_status()
+            resp = _get_with_retry(url, timeout=20)
         except Exception:
             continue
 
@@ -131,8 +149,7 @@ def fetch_pdf(ticker: str, year: int) -> Path:
             f"Place it manually at {dest}"
         )
 
-    resp = requests.get(pdf_url, timeout=120, headers=HEADERS, allow_redirects=True)
-    resp.raise_for_status()
+    resp = _get_with_retry(pdf_url, timeout=120)
 
     if b"%PDF" not in resp.content[:8]:
         raise RuntimeError(
