@@ -140,7 +140,8 @@ async def run_pipeline(ticker: str) -> None:
         actuals_2025: dict[str, float | None] = {}
         try:
             import yfinance as yf
-            p2025 = yf.Ticker(f"{ticker}.NS").history(start="2025-01-01", end="2025-12-31")
+            from app.agents.market_data import _yf_symbol
+            p2025 = yf.Ticker(_yf_symbol(ticker)).history(start="2025-01-01", end="2025-12-31")
             if not p2025.empty:
                 def _eom(df, month):
                     sub = df[df.index.month == month]

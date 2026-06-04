@@ -11,6 +11,14 @@ MARKET_DIR = Path("data/market")
 
 ACTUAL_YEARS = (2022, 2023, 2024, 2025)   # 2025 available as of 2026
 
+# NSE symbol → Yahoo Finance symbol where they differ
+_YF_TICKER_MAP = {
+    "REC": "RECLTD",
+}
+
+def _yf_symbol(ticker: str) -> str:
+    return f"{_YF_TICKER_MAP.get(ticker, ticker)}.NS"
+
 def fetch_actuals(ticker: str) -> dict[int, dict]:
     """
     Return {year: {revenue_cr, net_income_cr, eps}} for FY2022-2025.
@@ -57,7 +65,7 @@ def fetch_prices(ticker: str) -> pd.DataFrame:
         return df
 
     try:
-        t = yf.Ticker(f"{ticker}.NS")
+        t = yf.Ticker(_yf_symbol(ticker))
         df = t.history(start="2024-01-01", end="2024-12-31")
         df = df[["Close"]].rename(columns={"Close": "close"})
         df.index.name = "date"
@@ -89,7 +97,7 @@ def fetch_earnings_dates(ticker: str) -> list[str]:
         return json.loads(cache.read_text())
     dates = []
     try:
-        t = yf.Ticker(f"{ticker}.NS")
+        t = yf.Ticker(_yf_symbol(ticker))
         cal = t.calendar
         if cal is not None and "Earnings Date" in cal.index:
             dates = [str(d.date()) for d in cal.loc["Earnings Date"] if hasattr(d, "date")]
