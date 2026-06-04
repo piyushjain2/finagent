@@ -40,12 +40,37 @@ BASELINE_SKILL = Path("skills/forecast_baseline.md")
 ALT_SKILL = Path("skills/forecast_alt_strategy.md")
 STOCK_SKILL = Path("skills/stock_prediction_prompt.md")
 
+def _base_year_revenue(ticker: str, year: int) -> float | None:
+    """Read the extracted base-year revenue (used for unit sanity checks)."""
+    extract = RESPONSES_DIR / f"{ticker}_{year}_extract.json"
+    if not extract.exists():
+        return None
+    data = json.loads(extract.read_text())
+    for row in data.get("years", []):
+        if row.get("year") == year and row.get("revenue_cr"):
+            return float(row["revenue_cr"])
+    return None
+
+
+def _units_sane(result: dict, base_rev: float | None) -> bool:
+    """Detect unit errors: a forecast wildly smaller than base-year revenue
+    means the LLM answered in thousand-crores/lakh-crores instead of crores."""
+    if not base_rev:
+        return True  # nothing to compare against
+    for r in result.get("forecast", []):
+        rev = r.get("revenue_cr")
+        if rev is not None and rev < base_rev * 0.05:
+            return False
+    return True
+
+
 def _forecast_one(ticker: str, year: int, strategy: str) -> dict:
     cache = RESPONSES_DIR / f"{ticker}_{year}_{strategy}_forecast.json"
+    base_rev = _base_year_revenue(ticker, year)
     if cache.exists():
         cached = json.loads(cache.read_text())
-        # Reject null/empty/invalid cache — re-run instead of returning garbage
-        if isinstance(cached, dict) and cached.get("forecast"):
+        # Reject null/empty/invalid/unit-broken cache — re-run instead
+        if isinstance(cached, dict) and cached.get("forecast") and _units_sane(cached, base_rev):
             return cached
         cache.unlink()
 
@@ -69,6 +94,17 @@ def _forecast_one(ticker: str, year: int, strategy: str) -> dict:
     raw = call_claude(prompt, ticker=ticker, year=year,
                       agent=f"forecaster_{strategy}", max_tokens=2048)
     result = _extract_json(raw)
+
+    # Unit sanity check — retry ONCE with an explicit correction if broken
+    if not _units_sane(result, base_rev):
+        retry_prompt = (prompt +
+            f"\n\nIMPORTANT CORRECTION: Your previous answer used wrong units. "
+            f"FY{year} revenue was {base_rev:,.0f} crores. All forecast values must be "
+            f"in plain INR Crores at the same scale (similar magnitude, NOT divided by 1000).")
+        raw = call_claude(retry_prompt, ticker=ticker, year=year,
+                          agent=f"forecaster_{strategy}_retry", max_tokens=2048)
+        result = _extract_json(raw)
+
     RESPONSES_DIR.mkdir(parents=True, exist_ok=True)
     cache.write_text(json.dumps(result, indent=2))
     return result

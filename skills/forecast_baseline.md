@@ -14,6 +14,9 @@ Step 3: Use the FY{BASE_YEAR} growth rate as your primary projection assumption.
 Step 4: Project Revenue and Net Income forward for FY{FORECAST_YEARS} only.
 Step 5: Estimate EPS = Net Income / shares outstanding.
 Step 6: Set "base_year" to exactly {BASE_YEAR} in your JSON response.
+UNITS RULE: Express ALL monetary values in plain INR Crores (e.g., 853000 for ₹8.53 lakh crore).
+Never use thousands of crores, lakh crores, millions, or billions.
+
 Step 7: Return ONLY valid JSON — no prose, no explanation outside the JSON:
 {
   "strategy": "baseline",
